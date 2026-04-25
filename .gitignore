@@ -1,0 +1,5 @@
+# lazy.nvim lockfile — commit this if you want reproducible plugin versions across machines
+# lazy-lock.json
+
+# macOS
+.DS_Store
