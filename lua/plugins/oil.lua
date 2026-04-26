@@ -11,7 +11,7 @@ return {
     default_file_explorer = false, -- neo-tree handles netrw hijacking
     columns = { "icon" },
     view_options = {
-      show_hidden = false,
+      show_hidden = true,
       natural_order = true,
       sort = { { "type", "asc" }, { "name", "asc" } },
     },

@@ -42,6 +42,14 @@ return {
           },
         },
       },
+      pickers = {
+        find_files = {
+          hidden = true, -- show dotfiles (.luarc.json, .gitignore, .env etc.)
+        },
+        live_grep = {
+          additional_args = { "--hidden" }, -- also grep inside hidden files
+        },
+      },
       extensions = {
         fzf = {
           fuzzy = true,

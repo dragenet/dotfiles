@@ -27,7 +27,7 @@ Build a fully configured, modern Neovim-based development environment from scrat
 | Plugin manager | **lazy.nvim** | Replaces packer.nvim (unmaintained) |
 | Inline AI completion | **copilot.lua** | GitHub Copilot ghost-text completions |
 | Completion UI | **blink.cmp** | Replaces nvim-cmp (faster, new LazyVim default) |
-| Formatting | **conform.nvim** | Replaces null-ls (archived) |
+| Formatting | **conform.nvim** | Replaces null-ls (archived); prettier + eslint both installed via mason |
 | Linting | **nvim-lint** | Replaces null-ls |
 | Fuzzy finder | **telescope.nvim + telescope-fzf-native** | fzf-lua is faster but telescope UX preferred |
 | LSP management | **mason.nvim + nvim-lspconfig + mason-lspconfig** | Replaces nvim-lsp-installer |
@@ -192,11 +192,11 @@ Full language support for our stack. All servers installed via mason, formatters
 | Concern | Tool |
 |---|---|
 | LSP | `ts_ls` (TypeScript language server) |
-| Formatter | `eslint` (`--fix` as formatter — replaces prettier for JS/TS) |
+| Formatter | `eslint` (primary for JS/TS) or `prettier` (fallback for projects not using eslint formatting) |
 | Linter | `eslint` (dual role: lint + format) |
 | Extra | `nvim-ts-autotag` (auto-close and rename HTML/JSX tags) |
 
-**Note**: ESLint v9 with flat config supports formatting via `eslint --fix`. conform.nvim supports `eslint_d` (daemon, faster) as a formatter source — no prettier needed for JS/TS files.
+**Note**: conform.nvim will try eslint first for JS/TS (projects with eslint config), fall back to prettier for projects using it directly. Both installed via mason in the formatting phase. HTML and CSS always use prettier.
 
 #### HTML / CSS
 | Concern | Tool |
