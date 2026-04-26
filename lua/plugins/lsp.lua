@@ -17,11 +17,25 @@ return {
         prefix = "●",      -- the dot shown before the inline message
         spacing = 4,       -- spaces between end of code and the message
       },
-      update_in_insert = false,  -- don't update diagnostics while typing (less noise)
+      update_in_insert = true,  -- don't update diagnostics while typing (less noise)
       severity_sort = true,      -- errors shown above warnings above hints
     })
 
-    -- ─── 2. LSP keymaps (only active in buffers where LSP is running) ─────────
+    -- ─── 2. Virtual text: show in normal mode only UNCOMMENT TO ENABLE──────────
+    -- Hide virtual text when entering insert mode, restore it on leave
+    -- Underlines and signs remain visible in both modes
+    -- To compute errors live when typing enable update_in_insert
+    --
+    -- vim.api.nvim_create_autocmd("InsertEnter", {
+    --   callback = function() vim.diagnostic.config({ virtual_text = false }) end,
+    -- })
+    -- vim.api.nvim_create_autocmd("InsertLeave", {
+    --   callback = function()
+    --     vim.diagnostic.config({ virtual_text = { prefix = "●", spacing = 4 } })
+    --   end,
+    -- })
+
+    -- ─── 3. LSP keymaps (only active in buffers where LSP is running) ─────────
     -- LspAttach fires every time a language server connects to a buffer
     -- This is the modern replacement for the old on_attach callback
     vim.api.nvim_create_autocmd("LspAttach", {
@@ -55,7 +69,7 @@ return {
       end,
     })
 
-    -- ─── 3. Server-specific configuration ────────────────────────────────────
+    -- ─── 4. Server-specific configuration ────────────────────────────────────
     -- vim.lsp.config() customizes a server BEFORE it starts
     -- nvim-lspconfig provides the base defaults; this merges on top of them
 
