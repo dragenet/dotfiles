@@ -2,8 +2,11 @@ return {
   "nvim-treesitter/nvim-treesitter",
   branch = "master",   -- stable API for Neovim 0.11+/0.12; "main" is an incompatible rewrite requiring nightly
   build = ":TSUpdate", -- keeps parsers in sync with the library after each plugin update
-  event = { "BufReadPre", "BufNewFile" }, -- load when opening any file, not at startup
-  cmd = { "TSInstall", "TSUpdate", "TSUpdateSync", "TSInstallInfo", "TSUninstall" }, -- also load when these commands are called
+  -- Loaded eagerly: lazy-loading on BufReadPre races with Neovim's highlighter,
+  -- which calls query.get() before nvim-treesitter's queries/ dir is on the runtimepath,
+  -- caching a nil result and silently breaking highlights for the whole session.
+  lazy = false,
+  cmd = { "TSInstall", "TSUpdate", "TSUpdateSync", "TSInstallInfo", "TSUninstall" },
   config = function()
     -- Note: on the master branch the module is "nvim-treesitter.configs", not "nvim-treesitter"
     -- The main branch uses a different API — don't mix docs from the two branches
