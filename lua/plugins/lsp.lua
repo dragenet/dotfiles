@@ -17,7 +17,7 @@ return {
         prefix = "●",      -- the dot shown before the inline message
         spacing = 4,       -- spaces between end of code and the message
       },
-      update_in_insert = true,  -- don't update diagnostics while typing (less noise)
+      update_in_insert = false,  -- don't update diagnostics while typing (less noise)
       severity_sort = true,      -- errors shown above warnings above hints
     })
 
