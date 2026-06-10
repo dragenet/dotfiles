@@ -9,6 +9,10 @@ return {
       install_dir = vim.fn.stdpath("data") .. "/site",
     })
 
+    -- Ansible playbooks use the "yaml.ansible" filetype (set by nvim-ansible) but
+    -- there's no separate "ansible" grammar — reuse the yaml parser for highlighting.
+    vim.treesitter.language.register("yaml", "yaml.ansible")
+
     -- Enable treesitter highlighting for every filetype that has a parser.
     -- vim.treesitter.start() is Neovim's built-in API; pcall silently skips filetypes with no parser.
     vim.api.nvim_create_autocmd("FileType", {
@@ -23,7 +27,7 @@ return {
       pattern = {
         "lua", "javascript", "typescript", "tsx",
         "html", "css", "python", "rust", "go",
-        "json", "yaml", "bash",
+        "json", "yaml", "yaml.ansible", "bash",
       },
       callback = function()
         vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"

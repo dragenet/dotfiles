@@ -3,6 +3,7 @@ return {
   dependencies = {
     "mason-org/mason.nvim",  -- must be loaded first (mason-lspconfig bridges into it)
     "neovim/nvim-lspconfig", -- provides default server configs that vim.lsp.enable() picks up
+    "b0o/SchemaStore.nvim",  -- JSON/YAML schema catalog (Kubernetes, GitHub Actions, etc.) for yamlls
   },
   -- We use config = function() instead of opts = {} because we need to do several
   -- things in sequence, not just call a single setup()
@@ -87,6 +88,50 @@ return {
       },
     })
 
+    -- yamlls: validates/completes plain YAML against schemas from the SchemaStore
+    -- catalog (Kubernetes manifests, GitHub Actions, docker-compose, etc.)
+    -- Ansible files use the "yaml.ansible" filetype and are handled by ansiblels
+    -- below instead — yamlls' default filetypes don't include yaml.ansible.
+    vim.lsp.config("yamlls", {
+      capabilities = {
+        textDocument = {
+          -- yamlls needs this to advertise folding support
+          foldingRange = {
+            dynamicRegistration = false,
+            lineFoldingOnly = true,
+          },
+        },
+      },
+      -- Merge in the full SchemaStore catalog (Kubernetes is matched by filename,
+      -- e.g. *.k8s.yaml, deployment.yaml, etc. — see schemastore.nvim docs)
+      before_init = function(_, new_config)
+        new_config.settings.yaml.schemas = vim.tbl_deep_extend(
+          "force",
+          new_config.settings.yaml.schemas or {},
+          require("schemastore").yaml.schemas()
+        )
+      end,
+      settings = {
+        redhat = { telemetry = { enable = false } },
+        yaml = {
+          validate = true,
+          format = { enable = true },
+          keyOrdering = false,
+          schemaStore = {
+            -- must be disabled to let schemastore.nvim's catalog take over
+            enable = false,
+            url = "",
+          },
+        },
+      },
+    })
+
+    -- ansiblels: powers completion/hover/diagnostics for Ansible playbooks and roles
+    -- Only attaches to the "yaml.ansible" filetype (set by nvim-ansible, see lua/plugins/ansible.lua)
+    -- Runs `ansible-lint` for validation — install it with :MasonInstall ansible-lint
+    -- (or `pipx install ansible-lint`) if linting diagnostics don't show up.
+    vim.lsp.config("ansiblels", {})
+
     -- ─── 4. mason-lspconfig: auto-install and auto-enable servers ─────────────
     require("mason-lspconfig").setup({
       -- These servers are installed automatically via mason on first launch
@@ -100,6 +145,8 @@ return {
         "basedpyright",  -- Python (modern fork of pyright)
         "rust_analyzer", -- Rust
         "gopls",         -- Go
+        "yamlls",        -- YAML (incl. Kubernetes manifests via SchemaStore)
+        "ansiblels",     -- Ansible playbooks/roles
       },
       -- automatic_enable = true is the default:
       -- mason-lspconfig calls vim.lsp.enable() for each installed server automatically

@@ -228,9 +228,23 @@ Full language support for our stack. All servers installed via mason, formatters
 | Formatter | `goimports` (superset of gofmt — fixes imports + formats) |
 | Linter | `golangci-lint` (meta-linter, runs many linters at once) |
 
+#### Ansible
+| Concern | Tool |
+|---|---|
+| LSP | `ansiblels` (ansible-language-server) — only attaches to the `yaml.ansible` filetype |
+| Filetype detection | `nvim-ansible` — sets `yaml.ansible` for `roles/*/tasks/`, `roles/*/handlers/`, `defaults/`, `group_vars/`, `host_vars/`, `playbooks/`, `playbook*.yml`, `molecule/` |
+| Linter | `ansible-lint` (installed via `:MasonInstall ansible-lint`; runs through ansiblels) |
+| Extra | `<leader>ta` runs the playbook/role under cursor via `nvim-ansible` |
+
+#### Kubernetes / general YAML
+| Concern | Tool |
+|---|---|
+| LSP | `yamlls` (yaml-language-server) for plain `.yaml`/`.yml` files |
+| Schemas | `SchemaStore.nvim` — full SchemaStore catalog (Kubernetes manifests, GitHub Actions, docker-compose, etc.), matched by filename/content |
+
 **alpha2phi reference**: "Neovim PDE — Web Development", "Neovim PDE — C/C++, Go, Python and Rust", "Common Language Servers"
 
-**Files to produce**: extend `lua/plugins/lsp.lua`, `lua/plugins/formatting.lua` with per-language config; add `lua/plugins/lang.lua` for extras (autotag, rustaceanvim)
+**Files to produce**: extend `lua/plugins/lsp.lua`, `lua/plugins/formatting.lua` with per-language config; add `lua/plugins/lang.lua` for extras (autotag, rustaceanvim); add `lua/plugins/ansible.lua` for nvim-ansible
 
 ---
 
@@ -272,6 +286,7 @@ Deferred until the core environment is fully working.
         ├── dap.lua           # debugging
         ├── testing.lua       # neotest
         ├── lang.lua          # language extras (autotag, rustaceanvim, etc.)
+        ├── ansible.lua       # nvim-ansible (yaml.ansible filetype detection, playbook runner)
         └── ai.lua            # claude-code.nvim
 ```
 

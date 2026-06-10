@@ -30,7 +30,7 @@ return {
       defaults = {
         prompt_prefix = "  ",
         selection_caret = " ",
-        path_display = { "smart" },
+        path_display = { "truncate" }, -- show full relative path, only truncate from the left if the window is too narrow
         file_ignore_patterns = {
           "node_modules", ".git/", "dist/", "build/",
         },
