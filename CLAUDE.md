@@ -319,14 +319,14 @@ Deferred until the core environment is fully working.
 
 ## Progress Tracker
 
-- [ ] Phase 0 — Vim Fundamentals
-- [ ] Phase 1 — init.lua & Plugin Manager
-- [ ] Phase 2 — UI & Navigation
-- [ ] Phase 3 — Editing Power
-- [ ] Phase 4 — LSP + Completion
-- [ ] Phase 5 — Git Integration
+- [x] Phase 0 — Vim Fundamentals
+- [x] Phase 1 — init.lua & Plugin Manager
+- [x] Phase 2 — UI & Navigation
+- [x] Phase 3 — Editing Power
+- [x] Phase 4 — LSP + Completion
+- [x] Phase 5 — Git Integration
 - [ ] Phase 6 — Snippets
 - [ ] Phase 7 — Debugging & Testing
 - [ ] Phase 8 — AI Integration
-- [ ] Phase 9 — Language-specific PDE
+- [ ] Phase 9 — Language-specific PDE (core languages + Ansible/K8s done; nvim-ts-autotag and rustaceanvim extras pending)
 - [ ] Phase 10 — Polish & Quality of Life

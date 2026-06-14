@@ -148,10 +148,17 @@ return {
         "yamlls",        -- YAML (incl. Kubernetes manifests via SchemaStore)
         "ansiblels",     -- Ansible playbooks/roles
       },
-      -- automatic_enable = true is the default:
-      -- mason-lspconfig calls vim.lsp.enable() for each installed server automatically
-      -- so you don't need to call vim.lsp.enable("ts_ls") etc. manually
-      automatic_enable = true,
+      -- automatic_enable = true is the default: mason-lspconfig calls vim.lsp.enable()
+      -- for each installed server automatically, so you don't need to call
+      -- vim.lsp.enable("ts_ls") etc. manually.
+      --
+      -- rust_analyzer is excluded: mason still installs the binary (it's in
+      -- ensure_installed above), but rustaceanvim (lua/plugins/lang.lua) sets up
+      -- its own rust-analyzer client with extra tooling. Enabling both would
+      -- attach two LSP clients to the same Rust buffers.
+      automatic_enable = {
+        exclude = { "rust_analyzer" },
+      },
     })
 
   end,
