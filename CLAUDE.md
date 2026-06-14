@@ -329,4 +329,4 @@ Deferred until the core environment is fully working.
 - [ ] Phase 7 — Debugging & Testing
 - [ ] Phase 8 — AI Integration
 - [x] Phase 9 — Language-specific PDE
-- [ ] Phase 10 — Polish & Quality of Life
+- [x] Phase 10 — Polish & Quality of Life (bufferline and noice intentionally skipped)
