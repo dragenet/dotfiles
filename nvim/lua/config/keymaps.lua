@@ -12,11 +12,8 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- ─── Window navigation ────────────────────────────────────────────────────────
--- Move between splits with Ctrl+hjkl instead of Ctrl+w then hjkl
-map("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
-map("n", "<C-j>", "<C-w>j", { desc = "Move to lower window" })
-map("n", "<C-k>", "<C-w>k", { desc = "Move to upper window" })
-map("n", "<C-l>", "<C-w>l", { desc = "Move to right window" })
+-- Ctrl+hjkl moves between splits (and, via smart-splits.nvim, tmux panes too)
+-- See lua/plugins/smart-splits.lua
 
 -- ─── Buffer navigation ────────────────────────────────────────────────────────
 map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })

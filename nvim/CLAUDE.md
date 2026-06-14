@@ -10,7 +10,7 @@ Build a fully configured, modern Neovim-based development environment from scrat
 - Each phase produces working, committable config files.
 - Claude explains *why* before *how* — no cargo-culting plugins.
 - We reference alpha2phi's series as curriculum backbone, but use **2025-current tooling** (several articles use deprecated tools).
-- All config lives here in `/Users/dominik/Projects/nvim/` and gets symlinked/copied to `~/.config/nvim/` when ready.
+- All config lives here in `/Users/dominik/Projects/dotfiles/nvim/` (part of the `dotfiles` repo) and is symlinked to `~/.config/nvim/`.
 
 ---
 
