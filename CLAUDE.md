@@ -328,5 +328,5 @@ Deferred until the core environment is fully working.
 - [ ] Phase 6 — Snippets
 - [ ] Phase 7 — Debugging & Testing
 - [ ] Phase 8 — AI Integration
-- [ ] Phase 9 — Language-specific PDE (core languages + Ansible/K8s done; nvim-ts-autotag and rustaceanvim extras pending)
+- [x] Phase 9 — Language-specific PDE
 - [ ] Phase 10 — Polish & Quality of Life
