@@ -175,6 +175,12 @@ Version control without leaving Neovim.
 
 **Files to produce**: `lua/plugins/ai.lua`
 
+**Blocked / needs scoping**: the user's company doesn't allow Claude Code, so
+`claude-code.nvim` can only run on the personal machine. Plan: gate the spec
+with `cond = function() return vim.env.NVIM_PROFILE == "personal" end`, and
+reuse the same `NVIM_PROFILE` env var to vary other per-machine lists (e.g.
+mason's `ensure_installed`).
+
 ---
 
 ### Phase 9 — Language-specific PDE
