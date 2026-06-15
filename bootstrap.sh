@@ -209,6 +209,140 @@ link() {
   log "Linked $link_path -> $target"
 }
 
+ask_yes_no() {
+  local prompt="$1" default="$2" reply
+  if [ ! -r /dev/tty ]; then
+    [ "$default" = "y" ]
+  else
+    read -r -p "$prompt " reply </dev/tty >/dev/tty || reply=""
+    reply="${reply:-$default}"
+    case "$reply" in
+      y|Y) return 0 ;;
+      *) return 1 ;;
+    esac
+  fi
+}
+
+install_node() {
+  case "$PLATFORM" in
+    macos) brew install node ;;
+    linux)
+      case "$PKG_MGR" in
+        apt) $SUDO apt-get install -y nodejs npm ;;
+        dnf) $SUDO dnf install -y nodejs npm ;;
+        pacman) $SUDO pacman -S --needed --noconfirm nodejs npm ;;
+      esac
+      ;;
+  esac
+}
+
+install_go() {
+  case "$PLATFORM" in
+    macos) brew install go ;;
+    linux)
+      case "$PKG_MGR" in
+        apt) $SUDO apt-get install -y golang-go ;;
+        dnf) $SUDO dnf install -y golang ;;
+        pacman) $SUDO pacman -S --needed --noconfirm go ;;
+      esac
+      ;;
+  esac
+}
+
+install_python() {
+  case "$PLATFORM" in
+    macos) brew install python3 ;;
+    linux)
+      case "$PKG_MGR" in
+        apt) $SUDO apt-get install -y python3 python3-pip python3-venv ;;
+        dnf) $SUDO dnf install -y python3 python3-pip ;;
+        pacman) $SUDO pacman -S --needed --noconfirm python python-pip ;;
+      esac
+      ;;
+  esac
+}
+
+PY_TOOL_RUNNER=""
+
+# Picks a tool to install ansible into its own isolated environment (so it
+# doesn't fight with the system/Homebrew Python). Prefers whichever of
+# pipx/uv is already installed; if neither is present, asks the user.
+ensure_python_tool_runner() {
+  [ -n "$PY_TOOL_RUNNER" ] && return
+
+  if command -v pipx >/dev/null 2>&1; then
+    PY_TOOL_RUNNER="pipx"; return
+  fi
+  if command -v uv >/dev/null 2>&1; then
+    PY_TOOL_RUNNER="uv"; return
+  fi
+
+  local choice="1"
+  if [ -r /dev/tty ]; then
+    {
+      echo "Neither pipx nor uv found (needed to install ansible in an isolated environment)."
+      echo "  1) pipx (default)"
+      echo "  2) uv"
+      read -r -p "Choose [1/2]: " choice
+    } </dev/tty >/dev/tty || choice="1"
+  fi
+  choice="${choice:-1}"
+
+  case "$choice" in
+    2)
+      log "Installing uv"
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+      export PATH="$HOME/.local/bin:$PATH"
+      PY_TOOL_RUNNER="uv"
+      ;;
+    *)
+      log "Installing pipx"
+      case "$PLATFORM" in
+        macos) brew install pipx ;;
+        linux)
+          case "$PKG_MGR" in
+            apt) $SUDO apt-get install -y pipx ;;
+            dnf) $SUDO dnf install -y pipx ;;
+            pacman) $SUDO pacman -S --needed --noconfirm python-pipx ;;
+          esac
+          ;;
+      esac
+      pipx ensurepath
+      PY_TOOL_RUNNER="pipx"
+      ;;
+  esac
+}
+
+install_ansible() {
+  ensure_python_tool_runner
+  case "$PY_TOOL_RUNNER" in
+    pipx) pipx install --include-deps ansible ;;
+    uv) uv tool install --with-executables-from ansible-core ansible ;;
+  esac
+}
+
+install_rust() {
+  if command -v rustup >/dev/null 2>&1; then
+    log "rustup already installed"
+    return
+  fi
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+}
+
+install_optional_toolchains() {
+  if [ ! -r /dev/tty ]; then
+    log "No tty available; skipping optional language toolchain prompts (see nvim/README.md)"
+    return
+  fi
+
+  log "Optional language toolchains (used by mason LSPs/formatters in nvim)"
+  if ask_yes_no "Install Node.js? [y/N]" "n"; then install_node; fi
+  if ask_yes_no "Install Go? [y/N]" "n"; then install_go; fi
+  if ask_yes_no "Install Python 3? [y/N]" "n"; then install_python; fi
+  if ask_yes_no "Install Rust (via rustup)? [y/N]" "n"; then install_rust; fi
+  if ask_yes_no "Install Ansible (via pipx/uv)? [y/N]" "n"; then install_ansible; fi
+}
+
 create_symlinks() {
   link "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
   link "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
@@ -228,9 +362,8 @@ Done!
 Next steps:
   - Start tmux, then press 'Ctrl-b I' to install tmux plugins via TPM.
   - Launch nvim - lazy.nvim and mason will bootstrap plugins/LSPs on first run.
-  - See nvim/README.md for optional language toolchains (node, go, python,
-    rust), a Nerd Font, and the formatter/linter CLIs installed via
-    :MasonInstall.
+  - See nvim/README.md for a Nerd Font and the formatter/linter CLIs
+    installed via :MasonInstall.
 EOF
 }
 
@@ -247,6 +380,7 @@ main() {
   resolve_dotfiles_dir
   install_tpm
   create_symlinks
+  install_optional_toolchains
   print_summary
 }
 
