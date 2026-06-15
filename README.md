@@ -12,6 +12,21 @@ targets.
 
 ## Quickstart (new machine)
 
+One-liner, works on macOS and Linux, no manual clone required:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dragenet/dotfiles/master/bootstrap.sh | bash
+```
+
+This installs git, tmux, Neovim 0.11+, ripgrep, fd, and TPM, clones this repo
+to `~/Projects/dotfiles` (override with `DOTFILES_DIR`), and symlinks the
+configs into place. Safe to re-run.
+
+If you've already cloned the repo, run `./bootstrap.sh` from its root instead
+— it detects the existing checkout and skips the clone.
+
+To do it by hand instead:
+
 ```bash
 git clone git@github.com:dragenet/dotfiles.git ~/Projects/dotfiles
 
