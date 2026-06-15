@@ -15,6 +15,10 @@ vim.g.maplocalleader = " "
 -- Ctrl+hjkl moves between splits (and, via smart-splits.nvim, tmux panes too)
 -- See lua/plugins/smart-splits.lua
 
+-- ─── Splits (mirrors tmux's prefix+| / prefix+-) ─────────────────────────────
+map("n", "<leader>|", "<cmd>vsplit<cr>", { desc = "Split vertically" })
+map("n", "<leader>-", "<cmd>split<cr>",  { desc = "Split horizontally" })
+
 -- ─── Buffer navigation ────────────────────────────────────────────────────────
 map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 map("n", "<S-l>", "<cmd>bnext<cr>",     { desc = "Next buffer" })

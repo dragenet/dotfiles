@@ -4,3 +4,9 @@
 # (e.g. for smart-splits.nvim resizing). The RIGHT Option key is left alone,
 # so it keeps producing Polish national characters (ą, ę, ł, ...) as usual.
 macos-option-as-alt = left
+
+# Always land in tmux. "-A" attaches to the "main" session if it already
+# exists (creating it otherwise), so every new Ghostty window/tab becomes
+# another client on the SAME session — nothing gets abandoned, and
+# tmux-continuum/resurrect keep it persisted across restarts.
+command = /opt/homebrew/bin/tmux new-session -A -s main
