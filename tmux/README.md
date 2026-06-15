@@ -34,10 +34,11 @@ install the configured plugins (tmux-yank, tmux-resurrect, tmux-continuum).
 
 | Keys | Action |
 |------|--------|
-| `Ctrl-b %` | Split pane vertically |
-| `Ctrl-b "` | Split pane horizontally |
+| `Ctrl-b \|` | Split pane vertically (side by side) |
+| `Ctrl-b -` | Split pane horizontally (stacked) |
 | `Ctrl-hjkl` | Move between panes — and into Neovim splits seamlessly |
-| `Alt-hjkl` | Resize the current pane/split |
+| `Alt-hjkl` | Resize the current pane/split (left Option key, see `../ghostty/`) |
+| `Ctrl-Shift-h` / `Ctrl-Shift-l` | Previous / next window |
 | `Ctrl-b d` | Detach (session keeps running) |
 | `Ctrl-b c` | New window |
 | `Ctrl-b ,` | Rename window |

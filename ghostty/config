@@ -1,0 +1,6 @@
+# ~/Library/Application Support/com.mitchellh.ghostty/config (symlinked from dotfiles/ghostty/config)
+
+# Make the LEFT Option key act as Alt/Meta, so tmux/Neovim see Alt-hjkl etc.
+# (e.g. for smart-splits.nvim resizing). The RIGHT Option key is left alone,
+# so it keeps producing Polish national characters (ą, ę, ł, ...) as usual.
+macos-option-as-alt = left

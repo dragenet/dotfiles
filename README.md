@@ -4,10 +4,11 @@ Personal configuration for my dev environment, one directory per tool. Each
 directory is symlinked into place — edit the files here, not the symlink
 targets.
 
-| Tool  | Source              | Symlinked to                  |
-|-------|---------------------|--------------------------------|
-| Neovim | [`nvim/`](nvim/)   | `~/.config/nvim`               |
-| tmux   | [`tmux/`](tmux/)   | `~/.config/tmux/tmux.conf`     |
+| Tool    | Source                  | Symlinked to                  |
+|---------|-------------------------|--------------------------------|
+| Neovim  | [`nvim/`](nvim/)       | `~/.config/nvim`               |
+| tmux    | [`tmux/`](tmux/)       | `~/.config/tmux/tmux.conf`     |
+| Ghostty | [`ghostty/`](ghostty/) | `~/Library/Application Support/com.mitchellh.ghostty/config` |
 
 ## Quickstart (new machine)
 
@@ -20,6 +21,9 @@ ln -s ~/Projects/dotfiles/nvim ~/.config/nvim
 # tmux
 mkdir -p ~/.config/tmux
 ln -s ~/Projects/dotfiles/tmux/tmux.conf ~/.config/tmux/tmux.conf
+
+# Ghostty (macOS)
+ln -sf ~/Projects/dotfiles/ghostty/config "~/Library/Application Support/com.mitchellh.ghostty/config"
 ```
 
 Then see each tool's README for first-launch steps.
