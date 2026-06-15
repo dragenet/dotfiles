@@ -7,8 +7,12 @@ navigation between tmux panes and Neovim splits.
 
 ## Prerequisites
 
-- `tmux` (`brew install tmux` on macOS)
-- `git` (to clone TPM, the plugin manager)
+```bash
+brew install tmux git
+```
+
+- `tmux` — the multiplexer itself.
+- `git` — to clone TPM, the plugin manager.
 
 ## Quickstart
 
