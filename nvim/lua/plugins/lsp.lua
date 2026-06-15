@@ -133,21 +133,36 @@ return {
     vim.lsp.config("ansiblels", {})
 
     -- ─── 4. mason-lspconfig: auto-install and auto-enable servers ─────────────
+
+    -- Servers needed regardless of which system toolchains are present
+    local ensure_installed = {
+      "lua_ls",        -- Lua (for this config)
+      "ts_ls",         -- TypeScript / JavaScript
+      "html",          -- HTML
+      "cssls",         -- CSS / SCSS / Less
+      "eslint",        -- ESLint (lint + format for JS/TS)
+      "basedpyright",  -- Python (modern fork of pyright)
+      "yamlls",        -- YAML (incl. Kubernetes manifests via SchemaStore)
+    }
+
+    -- Servers that need (or build against) a matching system toolchain:
+    -- skip installing them on machines that don't have the toolchain, so
+    -- mason doesn't try (and possibly fail) to build against a missing tool.
+    local has = require("config.has")
+    if has.exe("go") then
+      table.insert(ensure_installed, "gopls")
+    end
+    if has.exe("cargo") then
+      table.insert(ensure_installed, "rust_analyzer")
+    end
+    if has.exe("ansible-playbook") then
+      table.insert(ensure_installed, "ansiblels")
+    end
+
     require("mason-lspconfig").setup({
       -- These servers are installed automatically via mason on first launch
       -- Names here are lspconfig names; mason-lspconfig translates to mason package names
-      ensure_installed = {
-        "lua_ls",        -- Lua (for this config)
-        "ts_ls",         -- TypeScript / JavaScript
-        "html",          -- HTML
-        "cssls",         -- CSS / SCSS / Less
-        "eslint",        -- ESLint (lint + format for JS/TS)
-        "basedpyright",  -- Python (modern fork of pyright)
-        "rust_analyzer", -- Rust
-        "gopls",         -- Go
-        "yamlls",        -- YAML (incl. Kubernetes manifests via SchemaStore)
-        "ansiblels",     -- Ansible playbooks/roles
-      },
+      ensure_installed = ensure_installed,
       -- automatic_enable = true is the default: mason-lspconfig calls vim.lsp.enable()
       -- for each installed server automatically, so you don't need to call
       -- vim.lsp.enable("ts_ls") etc. manually.

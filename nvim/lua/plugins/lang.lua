@@ -19,9 +19,11 @@ return {
   -- It configures its own rust-analyzer LSP client with extra tools
   -- (:RustLsp runnables/debuggables/expandMacro/etc.) — rust_analyzer must
   -- NOT also be enabled via lspconfig/mason-lspconfig, see lsp.lua.
+  -- cond: only load on machines with a Rust toolchain installed.
   {
     "mrcjkb/rustaceanvim",
     version = "^9",
     lazy = false,
+    cond = function() return require("config.has").exe("cargo") end,
   },
 }

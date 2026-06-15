@@ -5,6 +5,8 @@
 return {
   "mfussenegger/nvim-ansible",
   ft = { "yaml" },
+  -- cond: only load on machines with ansible installed.
+  cond = function() return require("config.has").exe("ansible-playbook") end,
   keys = {
     {
       "<leader>ta",
