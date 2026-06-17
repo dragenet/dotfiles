@@ -5,6 +5,7 @@
 return {
   "Exafunction/codeium.nvim",
   cond         = function() return vim.env.NVIM_PROFILE == "work" end,
+  cmd          = { "Codeium" },
   event        = "InsertEnter",
   dependencies = { "nvim-lua/plenary.nvim" },
   opts         = {},
