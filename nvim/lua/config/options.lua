@@ -30,6 +30,7 @@ opt.splitbelow = true       -- horizontal splits open below
 opt.splitright = true       -- vertical splits open to the right
 
 -- Files & history
+opt.autoread = true           -- reload file when changed outside Neovim (checktime triggers it)
 opt.swapfile = false        -- don't create .swp files
 opt.backup = false          -- don't create backup files
 opt.undofile = true         -- persist undo history across sessions (saved to undodir)
