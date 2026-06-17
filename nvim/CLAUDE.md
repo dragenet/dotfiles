@@ -25,7 +25,7 @@ Build a fully configured, modern Neovim-based development environment from scrat
 | Concern | Our Choice | Notes |
 |---|---|---|
 | Plugin manager | **lazy.nvim** | Replaces packer.nvim (unmaintained) |
-| Inline AI completion | **copilot.lua** | GitHub Copilot ghost-text completions |
+| Inline AI completion | **copilot.lua** (personal) / **codeium.nvim** (work) | Gated by `NVIM_PROFILE`; minimal gets neither |
 | Completion UI | **blink.cmp** | Replaces nvim-cmp (faster, new LazyVim default) |
 | Formatting | **conform.nvim** | Replaces null-ls (archived); prettier + eslint both installed via mason |
 | Linting | **nvim-lint** | Replaces null-ls |
@@ -42,8 +42,15 @@ Build a fully configured, modern Neovim-based development environment from scrat
 
 ### AI Setup Rationale
 
-- **copilot.lua** handles ghost-text completions as you type (GitHub Copilot subscription)
-- **claude-code.nvim** opens Claude Code CLI in a Neovim-native toggle window — no API key needed, uses Claude Pro auth
+Three profiles controlled by `NVIM_PROFILE` env var (unset → `personal`):
+
+| Profile | AI completions | Notes |
+|---|---|---|
+| `personal` | **copilot.lua** + blink-cmp-copilot | GitHub Copilot subscription |
+| `work` | **codeium.nvim** (Windsurf) | Company policy prohibits Copilot |
+| `minimal` | none | SSH / containers / low-resource machines |
+
+- **claude-code.nvim** opens Claude Code CLI in a Neovim-native toggle window — no API key needed, uses Claude Pro auth; gated to `personal` only (company policy)
 - avante.nvim was considered but dropped: requires a paid Anthropic API key on top of Claude Pro
 
 ---
