@@ -8,5 +8,5 @@ return {
   cmd          = { "Codeium" },
   event        = "InsertEnter",
   dependencies = { "nvim-lua/plenary.nvim" },
-  opts         = {},
+  opts         = { enable_cmp_source = false },
 }
