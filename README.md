@@ -9,6 +9,7 @@ targets.
 | Neovim  | [`nvim/`](nvim/)       | `~/.config/nvim`               |
 | tmux    | [`tmux/`](tmux/)       | `~/.config/tmux/tmux.conf`     |
 | Ghostty | [`ghostty/`](ghostty/) | `~/Library/Application Support/com.mitchellh.ghostty/config` |
+| yabai   | [`yabai/`](yabai/)     | `~/.config/yabai/yabairc` (macOS only)                        |
 
 ## Quickstart (new machine)
 
@@ -19,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/dragenet/dotfiles/master/bootstrap.
 ```
 
 This installs git, tmux, Neovim 0.11+, ripgrep, fd, and TPM, clones this repo
-to `~/Projects/dotfiles` (override with `DOTFILES_DIR`), and symlinks the
+to `~/.dotfiles` (override with `DOTFILES_DIR`), and symlinks the
 configs into place. Safe to re-run.
 
 If you've already cloned the repo, run `./bootstrap.sh` from its root instead
@@ -28,17 +29,22 @@ If you've already cloned the repo, run `./bootstrap.sh` from its root instead
 To do it by hand instead:
 
 ```bash
-git clone git@github.com:dragenet/dotfiles.git ~/Projects/dotfiles
+git clone git@github.com:dragenet/dotfiles.git ~/.dotfiles
 
 # Neovim
-ln -s ~/Projects/dotfiles/nvim ~/.config/nvim
+ln -s ~/.dotfiles/nvim ~/.config/nvim
 
 # tmux
 mkdir -p ~/.config/tmux
-ln -s ~/Projects/dotfiles/tmux/tmux.conf ~/.config/tmux/tmux.conf
+ln -s ~/.dotfiles/tmux/tmux.conf ~/.config/tmux/tmux.conf
 
 # Ghostty (macOS)
-ln -sf ~/Projects/dotfiles/ghostty/config "~/Library/Application Support/com.mitchellh.ghostty/config"
+ln -sf ~/.dotfiles/ghostty/config "~/Library/Application Support/com.mitchellh.ghostty/config"
+
+# yabai (macOS only)
+brew install koekeishiya/formulae/yabai && brew services start yabai
+mkdir -p ~/.config/yabai
+ln -s ~/.dotfiles/yabai/yabairc ~/.config/yabai/yabairc
 ```
 
 Then see each tool's README for first-launch steps.

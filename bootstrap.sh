@@ -10,12 +10,12 @@
 # this repo if it isn't already checked out, and symlinks the configs into
 # place. Safe to re-run.
 #
-# Override the checkout location with DOTFILES_DIR (default ~/Projects/dotfiles).
+# Override the checkout location with DOTFILES_DIR (default ~/.dotfiles).
 
 set -euo pipefail
 
 REPO_URL="${DOTFILES_REPO_URL:-https://github.com/dragenet/dotfiles.git}"
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 warn() { printf '\033[1;33m!!\033[0m  %s\n' "$1" >&2; }
@@ -329,6 +329,13 @@ install_rust() {
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 }
 
+install_yabai() {
+  log "Installing yabai (tiling window manager)"
+  brew install koekeishiya/formulae/yabai
+  brew services start yabai
+  link "$DOTFILES_DIR/yabai/yabairc" "$HOME/.config/yabai/yabairc"
+}
+
 install_optional_toolchains() {
   if [ ! -r /dev/tty ]; then
     log "No tty available; skipping optional language toolchain prompts (see nvim/README.md)"
@@ -381,6 +388,13 @@ main() {
   install_tpm
   create_symlinks
   install_optional_toolchains
+
+  if [ "$PLATFORM" = "macos" ]; then
+    if ask_yes_no "Install yabai (tiling window manager, macOS only)? [y/N]" "n"; then
+      install_yabai
+    fi
+  fi
+
   print_summary
 }
 
