@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "webfetch": "allow",
+    "websearch": "allow",
+    "tmux-mcp_list-sessions": "allow",
+    "tmux-mcp_find-session": "allow",
+    "tmux-mcp_list-windows": "allow",
+    "tmux-mcp_list-panes": "allow",
+    "tmux-mcp_capture-pane": "allow",
+    "tmux-mcp_create-session": "allow",
+    "tmux-mcp_execute-command": "ask",
+    "tmux-mcp_get-command-result": "allow",
+    "tmux-mcp_create-window": "ask",
+    "tmux-mcp_split-pane": "ask",
+    "tmux-mcp_kill-session": "ask",
+    "tmux-mcp_kill-window": "ask",
+    "tmux-mcp_kill-pane": "ask"
+  },
+  "mcp": {
+    "tmux-mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "tmux-mcp"],
+      "enabled": true
+    }
+  },
+  "lsp": true
+}
