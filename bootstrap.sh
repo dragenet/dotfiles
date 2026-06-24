@@ -265,60 +265,29 @@ install_python() {
 PY_TOOL_RUNNER=""
 
 # Picks a tool to install ansible into its own isolated environment (so it
-# doesn't fight with the system/Homebrew Python). Prefers whichever of
-# pipx/uv is already installed; if neither is present, asks the user.
+# doesn't fight with the system/Homebrew Python). Uses uv.
 ensure_python_tool_runner() {
   [ -n "$PY_TOOL_RUNNER" ] && return
 
-  if command -v pipx >/dev/null 2>&1; then
-    PY_TOOL_RUNNER="pipx"; return
-  fi
   if command -v uv >/dev/null 2>&1; then
     PY_TOOL_RUNNER="uv"; return
   fi
 
-  local choice="1"
   if [ -r /dev/tty ]; then
     {
-      echo "Neither pipx nor uv found (needed to install ansible in an isolated environment)."
-      echo "  1) pipx (default)"
-      echo "  2) uv"
-      read -r -p "Choose [1/2]: " choice
-    } </dev/tty >/dev/tty || choice="1"
+      echo "uv not found (needed to install ansible in an isolated environment)."
+    } </dev/tty >/dev/tty
   fi
-  choice="${choice:-1}"
 
-  case "$choice" in
-    2)
-      log "Installing uv"
-      curl -LsSf https://astral.sh/uv/install.sh | sh
-      export PATH="$HOME/.local/bin:$PATH"
-      PY_TOOL_RUNNER="uv"
-      ;;
-    *)
-      log "Installing pipx"
-      case "$PLATFORM" in
-        macos) brew install pipx ;;
-        linux)
-          case "$PKG_MGR" in
-            apt) $SUDO apt-get install -y pipx ;;
-            dnf) $SUDO dnf install -y pipx ;;
-            pacman) $SUDO pacman -S --needed --noconfirm python-pipx ;;
-          esac
-          ;;
-      esac
-      pipx ensurepath
-      PY_TOOL_RUNNER="pipx"
-      ;;
-  esac
+  log "Installing uv"
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+  PY_TOOL_RUNNER="uv"
 }
 
 install_ansible() {
   ensure_python_tool_runner
-  case "$PY_TOOL_RUNNER" in
-    pipx) pipx install --include-deps ansible ;;
-    uv) uv tool install --with-executables-from ansible-core ansible ;;
-  esac
+  uv tool install --with-executables-from ansible-core ansible
 }
 
 install_rust() {
@@ -347,7 +316,7 @@ install_optional_toolchains() {
   if ask_yes_no "Install Go? [y/N]" "n"; then install_go; fi
   if ask_yes_no "Install Python 3? [y/N]" "n"; then install_python; fi
   if ask_yes_no "Install Rust (via rustup)? [y/N]" "n"; then install_rust; fi
-  if ask_yes_no "Install Ansible (via pipx/uv)? [y/N]" "n"; then install_ansible; fi
+  if ask_yes_no "Install Ansible via uv? [y/N]" "n"; then install_ansible; fi
 }
 
 create_symlinks() {
