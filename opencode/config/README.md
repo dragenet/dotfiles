@@ -1,7 +1,8 @@
 # OpenCode Configuration
 
-Personal global OpenCode config: the Superpowers plugin system, skill repositories
-(git submodules), custom agents, MCP servers, and memory.
+Staged OpenCode configuration for a future deployment: the Superpowers plugin
+system, skill repositories (git submodules), custom agents, MCP servers, and
+memory. It is not the live `~/.config/opencode` configuration yet.
 
 This config is designed to run **identically on multiple machines** (e.g. a private
 and a work laptop). The shared base (`opencode.json`, agents, skills, docs) is the
@@ -56,7 +57,7 @@ Machine-specific providers (e.g. a work-only gateway such as `kilocode`) go in t
 
 ---
 
-## Setup on a new machine
+## Setup on a new machine (after deployment)
 
 ### 1. Clone with submodules
 
@@ -163,8 +164,8 @@ OPENCODE_CONFIG="$HOME/.config/opencode/opencode.local.json" opencode
 See `AGENTS.md` for the full agent roster, per-agent skill whitelists, and MCP
 wiring. Key points:
 
-- MCP tools are disabled globally in `opencode.json` (`tools` block) and
-  re-enabled only inside their specialist agent (`ha`, `jira`, `stitch-mcp`,
+- MCP permission patterns are denied globally in `opencode.json` and allowed
+  only inside their specialist agent (`ha`, `jira`, `stitch-mcp`,
   `webscraper`/`webresearcher`/`webmonitor`, `webdebugger`).
 - `jira` and `stitch-mcp` are MCP-operator agents; `stitch` is the separate
   skill-driven design-to-code agent.

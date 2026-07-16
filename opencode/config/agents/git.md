@@ -19,10 +19,16 @@ permission:
     "git stash list*": allow
     "git add *": allow
     "git commit *": allow
+    "git commit --amend*": deny
     "git restore *": ask
     "git restore --staged *": allow
     "git switch *": allow
+    "git switch -f*": deny
+    "git switch --discard-changes*": deny
+    "git switch -C*": ask
     "git checkout *": allow
+    "git checkout -f*": deny
+    "git checkout --force*": deny
     "git checkout --*": deny
     "git checkout -- *": ask
     "git checkout .": deny
@@ -32,6 +38,8 @@ permission:
     "git tag*": allow
     "git merge*": allow
     "git pull*": allow
+    "git pull --rebase*": ask
+    "git pull -r*": ask
     "git fetch*": allow
     "git reset *": ask
     "git reset --hard*": deny
@@ -42,6 +50,9 @@ permission:
     "git push*": ask
     "git push --force*": deny
     "git push -f*": deny
+    "git branch -d*": ask
+    "git branch -D*": deny
+    "git tag -d*": ask
   task:
     "*": deny
   skill:
@@ -65,6 +76,6 @@ Workflow for commits:
 Rules:
 
 - Push requires explicit approval by default (`ask`); a project's local config may promote `git push` to `allow` for that repo. Force-push is always denied regardless of any override.
-- Staging, committing, restoring (staged only), switching branches, stashing, tagging, and merging are autonomous (no approval needed) within this agent's scope.
-- Never force, hard-reset, clean, interactive-rebase, or rewrite history — these remain denied even though other operations are now autonomous.
+- Staging, ordinary commits, restoring (staged only), ordinary branch switching, stashing, tagging, and merging are autonomous (no approval needed) within this agent's scope. Amend commits, forced/discarding checkouts or switches, and branch/tag deletion are guarded as applicable.
+- Never force, hard-reset, clean, interactive-rebase, rewrite history, or delete a branch with `-D` — these remain denied even though other operations are now autonomous.
 - Do not decide architecture or rewrite code; this agent is only for git hygiene.

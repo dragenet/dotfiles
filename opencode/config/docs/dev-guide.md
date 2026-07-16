@@ -72,8 +72,8 @@ of lookup queries.
   `dcp.jsonc` settings are the primary context-management policy, with native
   compaction retained as a fallback floor.
 - `claude-bash-approve` has been verified only in isolated classifier tests.
-  Its active deployment remains deferred; the native bash `ask` default and
-  explicit catastrophic-command denies remain the safety floor.
+  Its active deployment remains deferred; the native broad Bash `allow` default
+  plus explicit catastrophic-command denies is the current baseline.
 
 ## Validation
 

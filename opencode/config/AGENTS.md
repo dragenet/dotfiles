@@ -59,9 +59,10 @@ outside that specialist. Persistent-memory behavior is limited to the routing
 rules in `docs/memory-rules.md`.
 
 Background delegation is strictly read-only. Use native `task` delegation for
-work that writes files or runs bash. The staged configuration retains native
-bash prompts and explicit catastrophic-command denies; bash-approve has only
-passed isolated tests and its active deployment is deferred.
+work that writes files or runs bash. The staged configuration intentionally has
+a broad native Bash `allow` default with explicit catastrophic-command denies;
+`claude-bash-approve` has only passed isolated tests and its active deployment
+is deferred.
 
 After a staged configuration change is eventually deployed, restart OpenCode:
 it loads configuration only at startup.

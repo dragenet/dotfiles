@@ -200,21 +200,17 @@ Goal: wide permissions for autonomous / low-user-effort work, with a determinist
 safety floor that does **not** depend on the historically-flaky `permission.ask`
 plugin hook.
 
-### Bash approval — `claude-bash-approve` (testing) over a fail-safe native floor
+### Bash approval — broad native baseline; `claude-bash-approve` deferred
 
-- **Install:** `python3 install.py install --target opencode --scope both`
-  (writes opencode plugin files pointing at the shared Go runtime hook;
-  `categories.yaml` drives classification).
-- **Native baseline (fail-safe):** `opencode.json` `bash` default **`ask`** (not
-  `allow`) — if the plugin hook doesn't fire on 1.18.2, we fail to a prompt,
-  never silent-allow.
+- **Native baseline (intentional):** `opencode.json` `bash` default is
+  **`allow`**, matching the user's broad-autonomy preference.
 - **Native hard `deny` backstop** for catastrophic commands (`rm -rf`, `dd`,
   `mkfs`, `reboot`/`shutdown`/`poweroff`, `git push --force`, `terraform
-  destroy`, live `kubectl delete`, DB `DROP`/`TRUNCATE`) — kept even with the
-  plugin, so a plugin fail-open cannot expose these.
-- **Plugin** auto-approves the safe majority (git read ops, `npm`/`npx`/`uv`,
-  kubectl read ops, read-only shell, repo-scoped `read`/`grep`), `deny`s its
-  dangerous set, defers the rest to native `ask`.
+  destroy`) — explicit denies remain the safety baseline.
+- **`claude-bash-approve`:** isolated classifier tests passed, but active
+  deployment is deferred. If later activated, install with
+  `python3 install.py install --target opencode --scope both`; it is not part
+  of the current permission decision.
 - **`AGENTS.md` hard-rules** remain the behavioral net — immune to the
   inline-env-var-prefix pattern bypass (issue #16075) that can defeat native
   bash patterns.
@@ -227,8 +223,8 @@ plugin hook.
    still override?) — directly affects §9.
 3. Confirm `categories.yaml` location and that our tuning takes effect.
 
-If the plugin proves unreliable on 1.18.2, fall back to native generous
-`bash: allow` + curated deny/ask list (still gated by the hard-rules).
+The current native baseline is broad `bash: allow` plus explicit denies; no
+plugin fallback decision is needed while `claude-bash-approve` remains deferred.
 
 ### Hands-off runs — native `--auto`
 
@@ -306,6 +302,8 @@ workers (Part B) → merge/cluster (Part C) → serves `graphify query`.
 - **Must be write-capable** (`read: true` + `write: true`): the chunk file on
   disk is the success signal; a read-only/Explore-type worker silently produces
   nothing and breaks the run.
+- Its broad write/Bash permission is intentional worker-execution capability,
+  not a safety defect; it remains a non-delegating, hidden leaf agent.
 - `skill: {"*": "deny"}`, `task: {"*": "deny"}` — cheapest possible leaf worker.
 
 **Automatic maintenance (per-project, three layers):**

@@ -1,5 +1,11 @@
 # Handoff: OpenCode global config redesign
 
+> **Current state notice (2026-07-16):** The redesign is now implemented in
+> staged `~/.dotfiles/opencode/config/`. This document is historical discovery
+> context only. Do not restart brainstorming, re-discover the recorded findings,
+> or follow the old "nothing done" checklist below; use the current design and
+> implementation-plan documents for the staged configuration's state.
+
 Paste this whole file as the opening prompt for the next session (any agent/CLI
 that reads it as context). It is self-contained: goal, current state, findings,
 constraints, and open questions. The previous session used the

@@ -22,7 +22,7 @@
       "autopilot": "deny"
     },
     "bash": {
-      "*": "ask",
+      "*": "allow",
       "cat *": "allow",
       "echo *": "allow",
       "grep *": "allow",

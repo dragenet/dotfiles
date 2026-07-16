@@ -340,7 +340,7 @@ Copy from `~/.config/opencode/agents/web-fast-context.md`, then set the descript
 **Files:**
 - Modify: `opencode.json` (top-level `permission.bash`)
 
-- [ ] **Step 1:** Keep `bash."*": "ask"` as the fail-safe floor (per spec §8 — claude-bash-approve auto-approves the safe set; native stays `ask` so a plugin miss fails to a prompt). Add explicit hard-deny entries: `"rm -rf*": "deny"`, `"dd *": "deny"`, `"mkfs*": "deny"`, `"reboot*": "deny"`, `"shutdown*": "deny"`, `"poweroff*": "deny"`, `"git push --force*": "deny"`, `"terraform destroy*": "deny"`.
+- [ ] **Step 1:** Set `bash."*": "allow"` for the approved broad-autonomy baseline. Preserve explicit hard-deny entries: `"rm -rf*": "deny"`, `"dd *": "deny"`, `"mkfs*": "deny"`, `"reboot*": "deny"`, `"shutdown*": "deny"`, `"poweroff*": "deny"`, `"git push --force*": "deny"`, `"terraform destroy*": "deny"`. `claude-bash-approve` remains isolated-tested and deferred, not active.
 
 - [ ] **Step 2: Verify JSON parses** — Run: `python3 -c "import json;json.load(open('opencode.json'));print('valid')"` → Expected: `valid`.
 
@@ -385,14 +385,14 @@ Adds the four remaining plugins (`mnemosyne` + `anthropic-oauth` already present
 
 - [ ] **Step 2: Verify** — `python3 -c "import json,re,sys;s=open('dcp.jsonc').read();json.loads(re.sub(r'//.*','',s));print('valid')"` → `valid`.
 
-### Task 4.3: Install claude-bash-approve (testing)
+### Task 4.3: Record `claude-bash-approve` as isolated-tested and deferred
 
 **Files:**
 - External: installs opencode plugin files via its installer
 
-- [ ] **Step 1:** `python3 install.py install --target opencode --scope both` from a checkout of `mariusvniekerk/claude-bash-approve`.
+- [ ] **Step 1:** Do not install it into the staged or live configuration. Record the isolated classifier-test result and deferred activation in the current docs.
 
-- [ ] **Step 2: Verify the §15 items** — run a known-safe command in an opencode session (expect no prompt) and a known-dangerous one (expect block); confirm `categories.yaml` location and that per-agent native `allow` composition behaves as documented. Record findings in the design's §15.
+- [ ] **Step 2: Before any future activation,** verify the §15 items in an isolated OpenCode session: hook interception, safe/dangerous handling, `categories.yaml` location, and composition with per-agent native `allow`.
 
 ---
 
@@ -418,7 +418,7 @@ Adds the orchestrator + worker agents and the per-project opt-in doc template.
 - Create: `agents/graphify-extractor.md`
 - Modify: `opencode.json` (`agent.graphify-extractor`)
 
-- [ ] **Step 1: Write the worker** — spec §10: `hidden: true`, `read: allow`, `edit: allow` (**must be write-capable** — writes `graphify-out/.graphify_chunk_NN.json`, the success signal), `bash: allow` (for the python merge/write blocks), `task: {"*":"deny"}`, `skill: {"*":"deny"}`. Prompt: extract entities/relationships for the assigned chunk per `references/extraction-spec.md`, write the chunk JSON, return the JSON.
+- [ ] **Step 1: Write the worker** — spec §10: `hidden: true`, `read: allow`, `edit: allow` (**must be write-capable** — writes `graphify-out/.graphify_chunk_NN.json`, the success signal), `bash: allow` (for the python merge/write blocks), `task: {"*":"deny"}`, `skill: {"*":"deny"}`. This broad worker execution access is intentional, not a safety defect. Prompt: extract entities/relationships for the assigned chunk per `references/extraction-spec.md`, write the chunk JSON, return the JSON.
 
 - [ ] **Step 2: Verify write-capability** — Run: `grep -E 'edit:' agents/graphify-extractor.md` → Expected: `edit: allow` (NOT deny — a read-only worker silently breaks extraction).
 
