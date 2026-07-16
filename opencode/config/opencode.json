@@ -37,7 +37,17 @@
       "yq *": "allow",
       "git status *": "allow",
       "git diff *": "allow",
-      "git branch *": "allow"
+      "git branch *": "allow",
+      "npx ctx7*": "allow",
+      "ctx7*": "allow"
+    },
+    "read": {
+      "*": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "~/.config/opencode/**": "allow",
+      "~/.dotfiles/opencode/**": "allow"
     }
   },
   "tools": {
