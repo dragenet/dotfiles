@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "kilo/z-ai/glm-5.1",
+  "small_model": "kilo/minimax/minimax-m3",
+  "provider": {
+    "kilo": { "options": { "headers": { "X-KiloCode-OrganizationId": "{file:secrets/kilo.org}" } } }
+  },
+  "agent": {
+    "architect":        { "model": "kilo/z-ai/glm-5.1" },
+    "debugger":         { "model": "kilo/z-ai/glm-5.1" },
+    "autopilot":        { "model": "kilo/z-ai/glm-5.1" },
+    "general":          { "model": "kilo/z-ai/glm-5.1" },
+    "devops":           { "model": "kilo/z-ai/glm-5.1" },
+    "skill-smith":      { "model": "kilo/z-ai/glm-5.1" },
+    "jenkins":          { "model": "kilo/z-ai/glm-5.1" },
+    "webdebugger":      { "model": "kilo/z-ai/glm-5.1" },
+    "coder":            { "model": "kilo/deepseek/deepseek-v4-pro" },
+    "cloudflare":       { "model": "kilo/deepseek/deepseek-v4-pro" },
+    "frontend":         { "model": "kilo/deepseek/deepseek-v4-pro" },
+    "stitch":           { "model": "kilo/deepseek/deepseek-v4-pro" },
+    "writer":           { "model": "kilo/z-ai/glm-5.1" },
+    "webresearcher":    { "model": "kilo/z-ai/glm-5.1" },
+    "web-fast-context": { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "webscraper":       { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "webmonitor":       { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "ha":               { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "jira":             { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "stitch-mcp":       { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "graphify":         { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "graphify-extractor": { "model": "kilo/deepseek/deepseek-v4-flash" },
+    "git":              { "model": "kilo/minimax/minimax-m3" }
+  }
+}
