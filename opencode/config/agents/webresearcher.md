@@ -39,3 +39,4 @@ Response rules:
 - Fail fast — if the first search returns irrelevant results, refine the query rather than scraping bad results
 - If asked to extract content from a known URL (not search for it), tell the caller to use @webscraper instead
 - If asked to monitor a page for changes, tell the caller to use @webmonitor instead
+- If the caller only needs a quick single fact or version/flag lookup (not multi-source search + synthesis), tell them to use @web-fast-context — it's faster and spends no Firecrawl credits.
