@@ -37,13 +37,12 @@ explicit, non-sensitive opt-in use, but they are the default model on **no**
 agent there. Concretely, on the work machine:
 
 - Never use `kilo/anthropic/*` or `kilo/openai/*` passthrough for company code.
-- Never use the low-cost, training-enabled kilo model suffix variant (the one
-  that trains on submitted data and has crippled tool-calling) — see spec §3
-  for its exact spelling. Banned for any agent, any machine.
-- **One specific model family is banned outright, everywhere**, on either
-  machine — it hangs or returns no answer during agentic tool-calling loops.
-  See spec §3 (NDA rule) for the exact family name; do not assign it to any
-  agent under any provider.
+- Never use `:discounted` kilo model variants — that suffix trains on
+  submitted data and has crippled tool-calling. Banned for any agent, any
+  machine.
+- **Qwen models are banned outright, everywhere**, on either machine — they
+  hang or return no answer during agentic tool-calling loops. Do not assign
+  any Qwen model to any agent under any provider.
 
 ### `openai` availability
 
@@ -117,8 +116,8 @@ defaults.
 | `cloudflare` | `opencode-go/deepseek-v4-pro` · high | `kilo/deepseek/deepseek-v4-pro` · high | Workers/wrangler/DO = pure code transformation. |
 | `frontend` | `opencode-go/deepseek-v4-pro` · high | `kilo/deepseek/deepseek-v4-pro` · high | Component/UI build = implementation. |
 | `stitch` | `opencode-go/deepseek-v4-pro` · high | `kilo/deepseek/deepseek-v4-pro` · high | Stitch design→code = code generation. |
-| `writer` | `anthropic/claude-sonnet-4-6` · low | `kilo/z-ai/glm-5.1` · off | Docs/specs/docx-pptx-pdf = prose quality, minimal step-reasoning. The banned model family (see §2 NDA rule) was previously used for this role and is not carried forward. |
-| `webresearcher` | `openai/gpt-5.6-luna` · medium | `kilo/z-ai/glm-5.1` · on | High-volume web reads; luna ($1/$6) is the "fast/affordable" fit, 1.05M ctx for big crawls. The banned model family (see §2 NDA rule) was previously used for this role and is not carried forward. |
+| `writer` | `anthropic/claude-sonnet-4-6` · low | `kilo/z-ai/glm-5.1` · off | Docs/specs/docx-pptx-pdf = prose quality, minimal step-reasoning. Qwen (see §2 NDA rule) was previously used for this role and is not carried forward. |
+| `webresearcher` | `openai/gpt-5.6-luna` · medium | `kilo/z-ai/glm-5.1` · on | High-volume web reads; luna ($1/$6) is the "fast/affordable" fit, 1.05M ctx for big crawls. Qwen (see §2 NDA rule) was previously used for this role and is not carried forward. |
 | `web-fast-context` | `opencode-go/deepseek-v4-flash` · default | `kilo/deepseek/deepseek-v4-flash` · off | Quick sourced facts in parallel; cheap. |
 | `webscraper` | `opencode-go/deepseek-v4-flash` · default | `kilo/deepseek/deepseek-v4-flash` · off | Structured Firecrawl I/O; no reasoning. |
 | `webmonitor` | `opencode-go/deepseek-v4-flash` · default | `kilo/deepseek/deepseek-v4-flash` · off | Repeated change-tracking runs; cost-sensitive. |
@@ -151,7 +150,7 @@ tolerating the latency.
 - No frontier provider (`anthropic`, `openai`) is the **default** model on any
   agent on the work machine — NDA.
 - No `kilo/anthropic/*` or `kilo/openai/*` passthrough for company code.
-- No low-cost, training-enabled kilo model suffix variants, anywhere (see
-  spec §3 for the exact suffix spelling).
-- No models from the banned family (see §2 NDA rule), anywhere, on either
-  machine.
+- No `:discounted` kilo model variants, anywhere — that suffix trains on
+  submitted data and has crippled tool-calling.
+- No Qwen models, anywhere, on either machine — they hang or return no
+  answer during agentic tool-calling loops (see §2 NDA rule).
