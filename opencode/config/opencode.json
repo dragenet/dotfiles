@@ -515,14 +515,6 @@
         "@playwright/mcp@latest"
       ]
     },
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "{file:secrets/context7.key}"
-      },
-      "enabled": true
-    },
     "github": {
       "type": "local",
       "command": [
@@ -606,6 +598,11 @@
       "environment": {
         "STITCH_API_KEY": "{file:secrets/stitch.key}"
       },
+      "enabled": true
+    },
+    "tmux-mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "tmux-mcp"],
       "enabled": true
     }
   }
