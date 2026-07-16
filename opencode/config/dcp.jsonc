@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  "enabled": true,
+  "autoUpdate": true,
+  "debug": false,
+  "pruneNotification": "minimal",
+  "pruneNotificationType": "chat",
+  "experimental": {
+    "allowSubAgents": false
+  },
+  "compress": {
+    "mode": "range",
+    "permission": "allow",
+    "maxContextLimit": 800000,
+    "minContextLimit": 500000,
+    "modelMaxLimits": {
+      "opencode-go/deepseek-v4-pro": 800000,
+      "opencode-go/deepseek-v4-flash": 800000,
+      "opencode-go/minimax-m3": 800000,
+      "kilo/z-ai/glm-5.1": 160000,
+      "kilo/deepseek/deepseek-v4-pro": 800000,
+      "kilo/deepseek/deepseek-v4-flash": 800000,
+      "kilo/minimax/minimax-m3": 800000,
+      "openai/gpt-5.6-terra": 800000,
+      "openai/gpt-5.6-luna": 800000,
+      "anthropic/claude-opus-4-8": 800000,
+      "anthropic/claude-sonnet-4-6": 800000
+    },
+    "modelMinLimits": {
+      "opencode-go/deepseek-v4-pro": 500000,
+      "opencode-go/deepseek-v4-flash": 500000,
+      "opencode-go/minimax-m3": 500000,
+      "kilo/z-ai/glm-5.1": 100000,
+      "kilo/deepseek/deepseek-v4-pro": 500000,
+      "kilo/deepseek/deepseek-v4-flash": 500000,
+      "kilo/minimax/minimax-m3": 500000,
+      "openai/gpt-5.6-terra": 500000,
+      "openai/gpt-5.6-luna": 500000,
+      "anthropic/claude-opus-4-8": 500000,
+      "anthropic/claude-sonnet-4-6": 500000
+    },
+    "nudgeFrequency": 5,
+    "nudgeForce": "soft"
+  }
+}
