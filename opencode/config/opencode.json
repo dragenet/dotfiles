@@ -11,7 +11,9 @@
   },
   "plugin": [
     "opencode-mnemosyne",
-    "opencode-anthropic-oauth"
+    "opencode-anthropic-oauth",
+    "opencode-caffeinate",
+    "opencode-background-agents"
   ],
   "permission": {
     "edit": "ask",
