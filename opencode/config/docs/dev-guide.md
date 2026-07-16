@@ -1,191 +1,90 @@
-# Dev Guide — Working in the OpenCode Config Repo
+# Dev Guide: Staged OpenCode Config
 
-Reference material for editing this repository (`~/.config/opencode`): plugin JS,
-SKILL.md files, agent definitions, and shell scripts. Read this BEFORE making
-changes here. (Moved out of AGENTS.md to keep the global system prompt lean —
-see `docs/superpowers/specs/2026-06-14-agents-md-slimming-design.md`.)
+Reference for editing the staged configuration at
+`~/.dotfiles/opencode/config/`. It is the future target for
+`~/.config/opencode`, but is not deployed, symlinked, or live yet. Read this
+before changing configuration, agents, skills, or scripts.
 
----
+## Layout
 
-## Repository Layout
-
-```
-~/.config/opencode/
-├── opencode.json              # Main config (model, MCP servers, permissions, agents)
-├── alibaba-cloud.apikey       # Root-level secret (gitignored)
-├── secrets/                   # API keys and tokens (gitignored; see secrets/README.md)
-├── AGENTS.md                  # This file
-├── agents/                    # Custom agent definitions (19 files; + built-in `plan` in opencode.json = 20 agents — see Agent Roster)
-├── docs/
-│   ├── global-rules.md        # Safety rules (loaded via opencode.json instructions)
-│   ├── memory-rules.md        # Memory store/recall rules (loaded via opencode.json instructions)
-│   ├── plans/                 # Implementation plans
-│   └── superpowers/           # Brainstorming specs and plans
-├── plugins/superpowers.js     # Symlink → superpowers/.opencode/plugins/superpowers.js
-├── skills/                    # Skill discovery symlinks
-│   ├── anthropics/            # → ../anthropics-skills/skills
-│   ├── cloudflare-skills/     # → ../cloudflare-skills
-│   ├── stitch-skills/         # → ../stitch-skills
-│   ├── superpowers/           # → ../superpowers/skills
-│   └── jenkins-cli/           # → ../jenkins-cli/skills
-├── superpowers/               # Main plugin repo — git submodule (obra/superpowers, v5.1.0)
-├── anthropics-skills/         # Anthropic official skills — git submodule
-├── cloudflare-skills/         # Cloudflare skills — git submodule
-├── stitch-skills/             # Google Stitch skills — git submodule
-├── awesome-agent-skills/      # Community skills — git submodule
-└── jenkins-cli/               # Jenkins CLI (jk) skill — git submodule (avivsinai/jenkins-cli)
+```text
+~/.dotfiles/opencode/config/
+├── opencode.json                    # Shared config: plugins, permissions, agents, MCP
+├── opencode.local.*.example.json    # Per-machine model/provider templates
+├── dcp.jsonc                        # Dynamic Context Pruning configuration
+├── AGENTS.md                        # Staged global instructions
+├── agents/                          # 23 custom agent definitions
+├── docs/                            # Rules, plans, specs, and model selection
+├── skill/graphify/                  # Vendored graphify skill and references
+├── plugins/superpowers.js           # Symlink into the superpowers submodule
+├── skills/                          # Discovery symlinks into skill submodules
+├── superpowers/                     # Git submodule
+├── anthropics-skills/               # Git submodule
+├── cloudflare-skills/               # Git submodule
+├── stitch-skills/                   # Git submodule
+├── awesome-agent-skills/            # Git submodule
+├── jenkins-cli/                     # Git submodule
+└── secrets/                         # Gitignored machine-local secret files
 ```
 
-**Plugin load method:** Symlink (`plugins/superpowers.js` → `superpowers/.opencode/plugins/superpowers.js`). Frontmatter parsing and skill discovery are inlined in `superpowers.js`. The plugin auto-adds `superpowers/skills/` to config at runtime.
+The shared `opencode.json` has no model, small-model, or machine-specific
+provider configuration. Copy the appropriate example to the gitignored
+`opencode.local.json` and load it through `OPENCODE_CONFIG`. See
+`docs/model-selection.md` for the four-provider model table and assignment
+rationale.
 
-**Secrets:** Stored in `secrets/` (gitignored), referenced via `{file:PATH}` syntax in `opencode.json`. See `secrets/README.md` for required files and setup.
+## Agent Roster
 
-**Plugins:** Loaded via `opencode.json` `plugin` array: `opencode-mnemosyne` (memory: SQLite + FTS5 + sqlite-vec) and `opencode-anthropic-oauth`. Note: `package.json` declares only `@opencode-ai/plugin` and `opencode-mnemosyne` as deps, and `package.json` itself is gitignored.
+The staged roster has 23 custom agents plus OpenCode's built-in read-only
+`plan` agent. The four additions to the colleague baseline are `git`,
+`web-fast-context`, `graphify`, and `graphify-extractor`.
 
-## Build / Lint / Test Commands
+`graphify` owns graph construction and queries. It may dispatch only the hidden
+`graphify-extractor` worker, which writes extraction chunks beneath a project's
+`graphify-out/`. The capability is opt-in per project; see
+`docs/graphify-project-optin.md`.
 
-No traditional build system. The codebase uses Markdown, ES module JS, and Bash scripts.
+Use `permission:` in agent frontmatter and `opencode.json` for all access
+rules. The deprecated access-map configuration format is not used.
 
-### Run All Unit Tests
+## Documentation Lookups
+
+Use the ctx7 CLI for current library, framework, SDK, API, CLI, and cloud
+service documentation:
+
 ```bash
-cd ~/.config/opencode/superpowers/tests/opencode
-bash run-tests.sh
+npx ctx7@latest library <name> "<full question>"
+npx ctx7@latest docs <library-id> "<full question>"
 ```
 
-### Run a Single Test
+The shared bash permission allows `npx ctx7*` and `ctx7*`. Keep credentials out
+of lookup queries.
+
+## Plugins And Runtime Behavior
+
+- `opencode-mnemosyne` provides persistent memory routing described in
+  `docs/memory-rules.md`.
+- `opencode-caffeinate` keeps macOS awake while OpenCode sessions are active.
+- `opencode-background-agents` uses the strict read-only implementation:
+  background delegations cannot edit files or run bash. Use native `task`
+  delegation for work with side effects.
+- `@tarquinen/opencode-dcp@latest` supplies Dynamic Context Pruning; its
+  `dcp.jsonc` settings are the primary context-management policy, with native
+  compaction retained as a fallback floor.
+- `claude-bash-approve` has been verified only in isolated classifier tests.
+  Its active deployment remains deferred; the native bash `ask` default and
+  explicit catastrophic-command denies remain the safety floor.
+
+## Validation
+
+There is no build system. For configuration changes, run:
+
 ```bash
-cd ~/.config/opencode/superpowers/tests/opencode
-bash run-tests.sh --test test-plugin-loading.sh
+python3 -c "import json; json.load(open('opencode.json')); print('valid')"
+bash scripts/check-skill-whitelists.sh
 ```
 
-### Run with Verbose Output
-```bash
-bash run-tests.sh --verbose
-```
-
-### Run Integration Tests (requires OpenCode CLI)
-```bash
-bash run-tests.sh --integration
-bash run-tests.sh --integration --test test-tools.sh
-```
-
-### Available Test Files
-| Test | Type | Description |
-|------|------|-------------|
-| `test-plugin-loading.sh` | Unit | Plugin installation, structure, symlink |
-| `test-bootstrap-caching.sh` | Unit | Bootstrap caching behavior (uses `test-bootstrap-caching.mjs`) |
-| `test-priority.sh` | Integration | Skill priority resolution |
-| `test-tools.sh` | Integration | use_skill and find_skills tools |
-
-### Skill Triggering Tests
-```bash
-cd ~/.config/opencode/superpowers/tests/skill-triggering
-bash run-all.sh                    # All tests
-bash run-test.sh <skill-name>      # Single test
-```
-
-### Skill Validation
-```bash
-# Word count limits (getting-started: <150w, others: <500w)
-wc -w superpowers/skills/<skill-name>/SKILL.md
-
-# Verify frontmatter
-head -5 superpowers/skills/<skill-name>/SKILL.md
-
-# Render flowcharts to SVG
-./superpowers/skills/writing-skills/render-graphs.js superpowers/skills/<skill-name>
-```
-
-### Skill Whitelist Consistency Check
-Verifies every `permission.skill: allow` entry in `opencode.json` resolves to a
-real skill on disk (or a known built-in, or a wildcard match). Run after editing
-agent whitelists or updating skill submodules — catches silent drift when a skill
-is renamed/removed upstream. Orphan skills (no agent whitelists them) are reported
-as `[INFO]`, not failures.
-```bash
-bash scripts/check-skill-whitelists.sh   # exit 0 = OK, exit 1 = dead entries
-```
-
-## Code Style Guidelines
-
-### JavaScript (ES Modules)
-- **Module system:** ES modules (`import`/`export`) — never CommonJS `require()`
-- **`__dirname` equivalent:** `path.dirname(fileURLToPath(import.meta.url))`
-- **Path handling:** `path.join()` / `path.resolve()`, never string concatenation
-- **Error handling:** Try/catch with graceful fallbacks; never block bootstrap or session start
-- **JSDoc:** Required for all exported functions — include `@param` and `@returns`
-- **Naming:** camelCase for functions/variables; PascalCase for class/export names
-- **Indentation:** 2 spaces in `superpowers.js` — match the file you're editing
-
-### Shell Scripts (Bash)
-- **Shebang:** `#!/usr/bin/env bash`
-- **Strict mode:** `set -euo pipefail` at the top of every script
-- **Variables:** Always quote expansions: `"$VAR"`, never `$VAR`
-- **Script dir:** `SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"`
-- **Test output:** `[PASS]`, `[FAIL]`, `[SKIP]` prefixes on all result lines
-- **Exit codes:** 0 for success, 1 for failure
-
-### SKILL.md Files (Markdown)
-- **Required YAML frontmatter:**
-  ```yaml
-  ---
-  name: skill-name-with-hyphens
-  description: Use when [triggering condition] - never summarize the workflow
-  ---
-  ```
-- **Frontmatter rules:** Only `name` + `description`; max 1024 chars total
-- **Name format:** Lowercase letters, numbers, hyphens only
-- **Description:** Third person; starts with "Use when..."; never describes internal steps
-- **Encoding:** UTF-8, LF line endings, 80–100 char line width
-- **H1** = skill name (matches frontmatter); **H2** sections: Overview, When to Use, Core Pattern
-- **Cross-references:** `superpowers:skill-name` format — never use file paths
-
-### Agent Definition Files (`agents/*.md`)
-- YAML frontmatter with `name`, `description`, `model`, `mode`, and `tools` map
-- Prose instructions follow frontmatter: guidelines, then a `Skills to use:` section
-- `Skills to use:` lists skill names with a one-line trigger condition each
-- All agents reference context7 MCP for documentation
-- Per-agent bash permission overrides are in `opencode.json` under `agent.<name>`
-
-### Naming Conventions
-- **Skill directories:** Verb-first hyphenated: `using-git-worktrees`, `requesting-code-review`
-- **Agent definitions:** `agents/<name>.md`
-- **Session files:** `session-<id>.md` — ephemeral, do not commit (gitignored)
-
-## Configuration: opencode.json
-
-- **Default model:** `anthropic/claude-sonnet-4-6`
-- **Small model:** `anthropic/claude-haiku-4-5`
-- **Instructions:** `docs/global-rules.md`, `docs/memory-rules.md`
-- **Compaction:** Auto and prune enabled with 10k reserved tokens
-- **Permissions:** `edit`/`bash` default to `ask`; safe read-only commands auto-allowed globally
-- **Secrets:** Referenced via `{file:...}` syntax — actual values in `secrets/` (gitignored)
-- **MCP servers:** context7 (remote), github (npx, disabled), playwright (npx), pdf-reader (npx, disabled), homeassistant (remote), chrome-devtools (npx), firecrawl (npx, self-hosted), dart-mcp-server (disabled)
-- **Global tool disables:** `playwright_*`, `homeassistant_*`, `chrome-devtools_*`, `firecrawl_*`, `webfetch` — re-enabled per-agent as needed
-
-## Error Handling Patterns
-
-- **Plugin bootstrap:** Never throw; wrap in try/catch and return graceful defaults
-- **Network operations:** Use short timeouts (e.g., `git fetch` with 3 s timeout via `execSync`)
-- **File operations:** Always `fs.existsSync()` before reading; return `{ name:'', description:'' }` on failure
-- **Test assertions:** Pattern-match output with grep; emit `[PASS]`/`[FAIL]` prefixes
-
-## Key Files for Agents
-
-| Purpose | File |
-|---------|------|
-| OpenCode config | `opencode.json` |
-| Active plugin | `plugins/superpowers.js` (symlink) |
-| Plugin source | `superpowers/.opencode/plugins/superpowers.js` |
-| Install/migration guide | `superpowers/.opencode/INSTALL.md` |
-| Test runner | `superpowers/tests/opencode/run-tests.sh` |
-| Default agent | `agents/default.md` (name: `general`) |
-| Skill writing guide | `superpowers/AGENTS.md` |
-| Memory config | Plugin: `opencode-mnemosyne` (mnemosyne binary, SQLite + FTS5 + sqlite-vec) |
-| Global rules | `docs/global-rules.md` |
-| Memory rules | `docs/memory-rules.md` |
-
-## Superpowers Skills (14 total)
-
-Located in `superpowers/skills/`:
-`brainstorming`, `dispatching-parallel-agents`, `executing-plans`, `finishing-a-development-branch`, `receiving-code-review`, `requesting-code-review`, `subagent-driven-development`, `systematic-debugging`, `test-driven-development`, `using-git-worktrees`, `using-superpowers`, `verification-before-completion`, `writing-plans`, `writing-skills`
+Verify Markdown frontmatter and permission changes against the current
+OpenCode schema when their shape is uncertain. Do not deploy this staged tree,
+modify `~/.config/opencode`, or change `bootstrap.sh` as part of documentation
+or configuration maintenance unless that work is explicitly requested.

@@ -12,12 +12,15 @@
 
 ## Web Content Rules
 
-Do NOT use WebFetch for scraping, searching, or extracting web content. Always delegate to the appropriate Firecrawl subagent instead:
+Route web work to the specialist that matches its scope:
 
-- **Scrape/extract content from a URL** → delegate to `webscraper` subagent
-- **Search the web / research a topic** → delegate to `webresearcher` subagent
-- **Monitor a page for changes** → delegate to `webmonitor` subagent
+- **Fast fact, version, API flag, or provider reference** → `@web-fast-context`
+  using raw `websearch` and `webfetch`.
+- **Multi-source research and synthesis** → `@webresearcher`.
+- **Known-URL extraction, crawl, or JavaScript interaction** → `@webscraper`.
+- **Page change tracking** → `@webmonitor`.
 
-WebFetch is only acceptable for quick one-off URL checks when no extraction or analysis is needed. For any task involving "scrape", "extract", "crawl", "search the web", "find information online", or "monitor for changes" — you MUST delegate to the appropriate subagent above.
+Use `@web-fast-context` for quick sourced context only. Use the Firecrawl
+specialists for their corresponding research, extraction, and monitoring work.
 
 > Full, current agent list: see "Agent Roster" in `AGENTS.md`.
