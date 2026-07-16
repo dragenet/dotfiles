@@ -6,7 +6,9 @@ permission:
   read: allow
   glob: allow
   grep: allow
-  edit: deny
+  edit:
+    "*": deny
+    "docs/superpowers/**": allow
   bash: deny
 ---
 

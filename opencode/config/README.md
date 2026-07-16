@@ -31,48 +31,44 @@ same `opencode.json` automatically reads each machine's own `secrets/`.
 
 ## Models
 
-Only two model roles are used:
+The shared configuration is model-agnostic. Model and provider choices belong in
+the gitignored local layer: personal machines use `opencode-go`, `anthropic`, and
+`openai`; work machines use `kilo` as the NDA-safe default. Work-machine
+`anthropic` and `openai` access is configured only for explicit, non-sensitive
+opt-in use. No Qwen models are used.
 
-- **thinking** = `anthropic/claude-opus-4-8` → `architect`, `debugger`
-- **default** = `anthropic/claude-sonnet-4-6` → everyone else
-- **small** = `anthropic/claude-haiku-4-5`
-
-All of this is set in `opencode.local.json`. **To change a model for one agent,
-edit one line** in that file:
-
-```json
-{
-  "model": "anthropic/claude-sonnet-4-6",
-  "small_model": "anthropic/claude-haiku-4-5",
-  "provider": { },
-  "agent": {
-    "architect": { "model": "anthropic/claude-opus-4-8" },
-    "debugger":  { "model": "anthropic/claude-opus-4-8" }
-  }
-}
-```
-
-Machine-specific providers (e.g. a work-only gateway such as `kilocode`) go in the
-`provider` block here — never in `opencode.json`.
+The tracked templates are `opencode.local.personal.example.json` and
+`opencode.local.work.example.json`; copy the applicable one to
+`opencode.local.json`. The exact per-agent assignments, reasoning variants, and
+selection rationale are in `docs/model-selection.md`.
 
 ---
 
-## Setup on a new machine (after deployment)
+## Setup on a new machine (future procedure after deployment)
 
-### 1. Clone with submodules
+Deployment remains deferred. When this staged configuration is approved for
+deployment, install it from this dotfiles repository rather than cloning into
+`~/.config`:
 
 ```bash
-git clone <repo-url> ~/.config/opencode
-cd ~/.config/opencode
-git submodule update --init --recursive
+git clone <repo-url> ~/.dotfiles
+git -C ~/.dotfiles submodule update --init --recursive
+mkdir -p ~/.config
+ln -s ~/.dotfiles/opencode/config ~/.config/opencode
 ```
 
-### 2. Create `opencode.local.json`
+### 1. Create `opencode.local.json`
 
-Copy the template above into `~/.config/opencode/opencode.local.json` and fill in
-the `provider` block for this machine (leave `{}` if none).
+Within the symlink target, copy the applicable template to the gitignored local
+layer, then fill in the machine's provider header and secrets:
 
-### 3. Fill in secrets
+```bash
+cp ~/.config/opencode/opencode.local.personal.example.json ~/.config/opencode/opencode.local.json
+# Or, on a work machine:
+cp ~/.config/opencode/opencode.local.work.example.json ~/.config/opencode/opencode.local.json
+```
+
+### 2. Fill in secrets
 
 Each file holds a single value with **no trailing newline** (use `printf '%s'`).
 All files in `secrets/` except `README.md` are gitignored.
@@ -104,7 +100,7 @@ printf '%s' 'your-jira-token'                     > secrets/jira.token
 printf '%s' 'your-stitch-key'                     > secrets/stitch.key
 ```
 
-### 4. Wire up `OPENCODE_CONFIG`
+### 3. Wire up `OPENCODE_CONFIG`
 
 Pick **one** of the options below.
 
