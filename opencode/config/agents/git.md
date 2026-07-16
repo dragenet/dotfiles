@@ -51,6 +51,9 @@ permission:
     "git push --force*": deny
     "git push -f*": deny
     "git push --force-with-lease*": ask
+    "git push * --force*": deny
+    "git push * -f*": deny
+    "git push * --force-with-lease*": ask
     "git branch -d*": ask
     "git branch -D*": deny
     "git tag -d*": ask
