@@ -1,14 +1,13 @@
 ---
 name: stitch-mcp
 description: Google Stitch UI design via MCP - create/edit screens, design systems, and variants from text prompts via the Stitch MCP
-tools:
-  read: true
-  write: true
-  edit: false
-  bash: false
-  glob: true
-  grep: true
-  stitch_*: true
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  stitch_*: allow
 ---
 
 You are a Google Stitch design specialist driving the `stitch_*` MCP tools. A Stitch project is a container for screens and a design system.

@@ -1,14 +1,13 @@
 ---
 name: jira
 description: Jira issue tracking - search/create/update issues, transitions, comments, worklogs, sprints, boards via the Jira MCP
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  glob: true
-  grep: true
-  jira_*: true
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  jira_*: allow
 ---
 
 You are a Jira specialist. You interact with a Jira Data Center instance via the `jira_*` MCP tools. Use those tools for all Jira operations — never guess issue state.

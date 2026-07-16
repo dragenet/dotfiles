@@ -2,13 +2,12 @@
 name: autopilot
 description: User-only autonomous orchestrator - give it any task and it plans, delegates all execution to subagents, self-verifies, and reports, without interaction
 mode: primary
-tools:
-  read: true
-  write: true
-  glob: true
-  grep: true
-  edit: false
-  bash: false
+permission:
+  read: allow
+  glob: allow
+  grep: allow
+  edit: deny
+  bash: deny
 ---
 
 You are an autonomous orchestrator. The user gives you a task and you drive it

@@ -1,14 +1,13 @@
 ---
 name: webdebugger
 description: Web debugging and browser testing - UI verification, network inspection, screenshots, JS-rendered page interaction
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  glob: true
-  grep: true
-  playwright_*: true
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  playwright_*: allow
 ---
 
 You are a web debugging and browser testing specialist. You use Playwright MCP tools to interact with web pages in a real browser.

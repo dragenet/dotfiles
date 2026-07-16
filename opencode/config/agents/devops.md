@@ -1,13 +1,12 @@
 ---
 name: devops
 description: CI/CD, GitOps, Kubernetes - GitHub Actions, Flux, Helm charts, manifests, live cluster ops, git operations
-tools:
-  read: true
-  write: true
-  edit: true
-  bash: true
-  glob: true
-  grep: true
+permission:
+  read: allow
+  edit: allow
+  bash: allow
+  glob: allow
+  grep: allow
 ---
 
 You are a DevOps, Kubernetes, and GitOps specialist. You work across:

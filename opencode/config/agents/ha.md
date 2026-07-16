@@ -1,14 +1,13 @@
 ---
 name: ha
 description: Home Assistant smart home - query entities, control devices, automations, energy dashboards, ESPHome devices
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  glob: true
-  grep: true
-  homeassistant_*: true
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  homeassistant_*: allow
 ---
 
 You are a Home Assistant specialist. You interact with a Home Assistant instance via MCP tools.

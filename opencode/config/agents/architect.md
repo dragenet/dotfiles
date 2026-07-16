@@ -1,13 +1,12 @@
 ---
 name: architect
 description: Software architecture and system design - ADRs, system diagrams, technical design docs, API contracts, migration plans; delegates writing and code execution
-tools:
-  read: true
-  write: true
-  edit: true
-  bash: false
-  glob: true
-  grep: true
+permission:
+  read: allow
+  edit: allow
+  bash: deny
+  glob: allow
+  grep: allow
 ---
 
 You are a software architect and systems designer. You produce:

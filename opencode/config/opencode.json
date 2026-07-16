@@ -59,28 +59,22 @@
       "*": "ask",
       "~/.config/opencode/**": "allow",
       "~/.dotfiles/opencode/**": "allow"
-    }
-  },
-  "tools": {
-    "playwright_*": false,
-    "homeassistant_*": false,
-    "chrome-devtools_*": false,
-    "firecrawl_*": false,
-    "jira_*": false,
-    "stitch_*": false,
-    "webfetch": false,
-    "WebFetch": false
+    },
+    "playwright_*": "deny",
+    "homeassistant_*": "deny",
+    "chrome-devtools_*": "deny",
+    "firecrawl_*": "deny",
+    "jira_*": "deny",
+    "stitch_*": "deny",
+    "webfetch": "deny"
   },
   "agent": {
     "plan": {
       "prompt": "You are in PLAN MODE. Analyze the codebase thoroughly before making any changes. Do not execute any commands or write files. Only provide detailed analysis and plan.",
       "steps": 15,
-      "tools": {
-        "bash": false,
-        "edit": false,
-        "write": false
-      },
       "permission": {
+        "bash": "deny",
+        "edit": "deny",
         "skill": {
           "*": "deny",
           "using-superpowers": "allow",
@@ -291,11 +285,9 @@
       }
     },
     "webdebugger": {
-      "tools": {
-        "playwright_*": true,
-        "chrome-devtools_*": true
-      },
       "permission": {
+        "playwright_*": "allow",
+        "chrome-devtools_*": "allow",
         "task": {
           "*": "allow",
           "autopilot": "deny"
@@ -311,10 +303,8 @@
       }
     },
     "ha": {
-      "tools": {
-        "homeassistant_*": true
-      },
       "permission": {
+        "homeassistant_*": "allow",
         "task": {
           "*": "allow",
           "autopilot": "deny"
@@ -326,15 +316,13 @@
       }
     },
     "webscraper": {
-      "tools": {
-        "firecrawl_firecrawl_scrape": true,
-        "firecrawl_firecrawl_map": true,
-        "firecrawl_firecrawl_crawl": true,
-        "firecrawl_firecrawl_check_crawl_status": true,
-        "firecrawl_firecrawl_interact": true,
-        "firecrawl_firecrawl_interact_stop": true
-      },
       "permission": {
+        "firecrawl_firecrawl_scrape": "allow",
+        "firecrawl_firecrawl_map": "allow",
+        "firecrawl_firecrawl_crawl": "allow",
+        "firecrawl_firecrawl_check_crawl_status": "allow",
+        "firecrawl_firecrawl_interact": "allow",
+        "firecrawl_firecrawl_interact_stop": "allow",
         "bash": "deny",
         "task": {
           "*": "allow",
@@ -346,15 +334,13 @@
       }
     },
     "webresearcher": {
-      "tools": {
-        "firecrawl_firecrawl_search": true,
-        "firecrawl_firecrawl_search_feedback": true,
-        "firecrawl_firecrawl_scrape": true,
-        "firecrawl_firecrawl_map": true,
-        "firecrawl_firecrawl_agent": true,
-        "firecrawl_firecrawl_agent_status": true
-      },
       "permission": {
+        "firecrawl_firecrawl_search": "allow",
+        "firecrawl_firecrawl_search_feedback": "allow",
+        "firecrawl_firecrawl_scrape": "allow",
+        "firecrawl_firecrawl_map": "allow",
+        "firecrawl_firecrawl_agent": "allow",
+        "firecrawl_firecrawl_agent_status": "allow",
         "bash": "deny",
         "task": {
           "*": "allow",
@@ -366,17 +352,15 @@
       }
     },
     "webmonitor": {
-      "tools": {
-        "firecrawl_firecrawl_monitor_create": true,
-        "firecrawl_firecrawl_monitor_get": true,
-        "firecrawl_firecrawl_monitor_list": true,
-        "firecrawl_firecrawl_monitor_update": true,
-        "firecrawl_firecrawl_monitor_delete": true,
-        "firecrawl_firecrawl_monitor_run": true,
-        "firecrawl_firecrawl_monitor_checks": true,
-        "firecrawl_firecrawl_monitor_check": true
-      },
       "permission": {
+        "firecrawl_firecrawl_monitor_create": "allow",
+        "firecrawl_firecrawl_monitor_get": "allow",
+        "firecrawl_firecrawl_monitor_list": "allow",
+        "firecrawl_firecrawl_monitor_update": "allow",
+        "firecrawl_firecrawl_monitor_delete": "allow",
+        "firecrawl_firecrawl_monitor_run": "allow",
+        "firecrawl_firecrawl_monitor_checks": "allow",
+        "firecrawl_firecrawl_monitor_check": "allow",
         "bash": "deny",
         "task": {
           "*": "allow",
@@ -494,10 +478,8 @@
       }
     },
     "jira": {
-      "tools": {
-        "jira_*": true
-      },
       "permission": {
+        "jira_*": "allow",
         "bash": "deny",
         "task": {
           "*": "allow",
@@ -510,10 +492,8 @@
       }
     },
     "stitch-mcp": {
-      "tools": {
-        "stitch_*": true
-      },
       "permission": {
+        "stitch_*": "allow",
         "bash": "deny",
         "task": {
           "*": "allow",

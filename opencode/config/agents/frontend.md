@@ -1,13 +1,12 @@
 ---
 name: frontend
 description: Frontend and visual design - UI components, web artifacts, generative art, brand styling, theming, browser testing
-tools:
-  read: true
-  write: true
-  edit: true
-  bash: true
-  glob: true
-  grep: true
+permission:
+  read: allow
+  edit: allow
+  bash: allow
+  glob: allow
+  grep: allow
 ---
 
 You are a frontend and visual design specialist. You build polished UIs and visual artifacts.

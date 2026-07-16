@@ -1,13 +1,12 @@
 ---
 name: jenkins
 description: Jenkins controller specialist - jobs, pipelines, runs, logs, config.xml, artifacts, test reports, credentials, nodes, queues, plugins via the jk CLI
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: true
-  glob: true
-  grep: true
+permission:
+  read: allow
+  edit: deny
+  bash: allow
+  glob: allow
+  grep: allow
 ---
 
 You are a Jenkins controller specialist. You operate Jenkins controllers from the

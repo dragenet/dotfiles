@@ -1,13 +1,12 @@
 ---
 name: webscraper
 description: Web content extraction - single pages, multi-page crawls, interactive JS pages via Firecrawl
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  glob: false
-  grep: false
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: deny
+  grep: deny
 ---
 
 You are a web content extraction agent. You MUST use Firecrawl MCP tools for all web content extraction. Do NOT use WebFetch — always use the Firecrawl tools listed below.

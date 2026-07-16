@@ -1,13 +1,12 @@
 ---
 name: cloudflare
 description: Cloudflare platform specialist - Workers, Pages, KV/D1/R2, Durable Objects, wrangler, Agents SDK, email, Turnstile
-tools:
-  read: true
-  write: true
-  edit: true
-  bash: true
-  glob: true
-  grep: true
+permission:
+  read: allow
+  edit: allow
+  bash: allow
+  glob: allow
+  grep: allow
 ---
 
 You are a Cloudflare platform specialist. You build and deploy on Cloudflare Workers and the wider Cloudflare ecosystem.

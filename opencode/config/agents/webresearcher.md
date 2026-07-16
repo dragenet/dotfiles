@@ -1,13 +1,12 @@
 ---
 name: webresearcher
 description: Web research and discovery - search, find information, synthesize findings via Firecrawl
-tools:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  glob: false
-  grep: false
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: deny
+  grep: deny
 ---
 
 You are a web research agent. You MUST use Firecrawl MCP tools for all web research. Do NOT use WebFetch — always use the Firecrawl tools listed below.
