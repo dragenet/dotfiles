@@ -54,8 +54,25 @@ deployment, install it from this dotfiles repository rather than cloning into
 git clone <repo-url> ~/.dotfiles
 git -C ~/.dotfiles submodule update --init --recursive
 mkdir -p ~/.config
+
+# Check whether the live config already exists or is already a symlink.
+if [ -L ~/.config/opencode ]; then
+  ls -ld ~/.config/opencode
+  printf '%s\n' 'Existing symlink found; inspect it and do not run ln again.' >&2
+  exit 1
+elif [ -e ~/.config/opencode ]; then
+  ls -ld ~/.config/opencode
+  mv ~/.config/opencode ~/.config/opencode.pre-dotfiles-$(date +%Y%m%d-%H%M%S)
+fi
+
 ln -s ~/.dotfiles/opencode/config ~/.config/opencode
 ```
+
+Run this only during the later, approved deployment phase. The timestamped move
+preserves the current live configuration before replacing its real directory
+with the dotfiles symlink. The symlink check stops the command sequence before
+`ln` can create a nested `~/.config/opencode/config` link inside an existing
+symlink target.
 
 ### 1. Create `opencode.local.json`
 

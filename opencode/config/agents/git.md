@@ -50,6 +50,7 @@ permission:
     "git push*": ask
     "git push --force*": deny
     "git push -f*": deny
+    "git push --force-with-lease*": ask
     "git branch -d*": ask
     "git branch -D*": deny
     "git tag -d*": ask
@@ -75,7 +76,7 @@ Workflow for commits:
 
 Rules:
 
-- Push requires explicit approval by default (`ask`); a project's local config may promote `git push` to `allow` for that repo. Force-push is always denied regardless of any override.
+- Push requires explicit approval by default (`ask`); a project's local config may promote `git push` to `allow` for that repo. Plain or short force-pushes remain denied; `--force-with-lease` still requires explicit approval.
 - Staging, ordinary commits, restoring (staged only), ordinary branch switching, stashing, tagging, and merging are autonomous (no approval needed) within this agent's scope. Amend commits, forced/discarding checkouts or switches, and branch/tag deletion are guarded as applicable.
 - Never force, hard-reset, clean, interactive-rebase, rewrite history, or delete a branch with `-D` — these remain denied even though other operations are now autonomous.
 - Do not decide architecture or rewrite code; this agent is only for git hygiene.
