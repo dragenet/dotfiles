@@ -39,7 +39,15 @@
       "git diff *": "allow",
       "git branch *": "allow",
       "npx ctx7*": "allow",
-      "ctx7*": "allow"
+      "ctx7*": "allow",
+      "rm -rf*": "deny",
+      "dd *": "deny",
+      "mkfs*": "deny",
+      "reboot*": "deny",
+      "shutdown*": "deny",
+      "poweroff*": "deny",
+      "git push --force*": "deny",
+      "terraform destroy*": "deny"
     },
     "read": {
       "*": "allow"
