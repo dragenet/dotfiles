@@ -29,5 +29,5 @@ Never edit source files, configuration files, `AGENTS.md`, or any file outside
 `graphify-out/`. Do not delegate work and do not interact directly with users.
 
 The chunk file existing at the assigned path and containing valid JSON is the
-success signal. Return a compact completion summary with the assigned path and
-entity, relationship, and hyperedge counts.
+success signal. After writing it, return the same valid extraction JSON object
+verbatim, with no prose or Markdown wrapper.
