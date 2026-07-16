@@ -80,6 +80,25 @@ submodules (`superpowers/`, `anthropics-skills/`, `cloudflare-skills/`,
 - `plan` agent is defined in `opencode.json` only (read-only: no bash/edit/write tools).
 - `websearch` was removed — curl/wget is covered by any bash-enabled agent; readable web content via `@webscraper`.
 
+## context7
+
+Use the ctx7 CLI whenever current library, framework, SDK, API, CLI, or cloud-service documentation is needed. It is CLI-only: do not use a context7 MCP server or `secrets/context7.key`.
+
+1. Resolve the library: `npx ctx7@latest library <name> "<full question>"`
+2. Choose the `/org/project` result by exact match, relevance, and reputation.
+3. Fetch docs: `npx ctx7@latest docs <libraryId> "<full question>"`
+
+Do not include secrets in the query. Use the fetched documentation in the response. Global `bash` permits `npx ctx7*` and `ctx7*` (Task 3.1).
+
+## Web Agents
+
+- `web-fast-context`: quick sourced single facts, versions, API flags, or provider tool references via raw `websearch` + `webfetch`; cheap and parallel; no Firecrawl.
+- `webresearcher`: dedicated multi-source Firecrawl research and synthesis; `gpt-5.6-luna` personal; spends Firecrawl credits.
+- `webscraper`: known-URL extraction, page crawl, or JS interaction via Firecrawl.
+- `webmonitor`: Firecrawl page change tracking.
+
+Routing: fast fact -> `web-fast-context`; multi-source question -> `webresearcher`; known URL -> `webscraper`; change tracking -> `webmonitor`.
+
 ## Delegation Rules (All Agents)
 
 These apply to every agent (this file is injected globally via `Instruction.system`):
@@ -131,4 +150,3 @@ Name-collision precedence (first match wins):
 
 Use `superpowers:skill-name` prefix to force the superpowers version and bypass shadowing.
 Per-agent visibility is then filtered by `permission.skill` (see "Per-Agent Skill Whitelists").
-
