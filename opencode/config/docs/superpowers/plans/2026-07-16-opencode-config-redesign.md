@@ -13,6 +13,9 @@
 - Config root is `~/.dotfiles/opencode/config/` — the future `~/.config/opencode` symlink target. All relative paths below are from this root unless stated.
 - **Do NOT** touch the live `~/.config/opencode`, `~/.dotfiles/bootstrap.sh`, or `infra-flux`. No symlink, no `opencode.local.json` with real secrets, no `git commit` unless the user explicitly asks.
 - Shared `opencode.json` carries **no** `model`/`small_model`/machine `provider` block.
+- Do not use legacy boolean `tools:` configuration. Migrate every existing agent
+  file and `opencode.json` tool override to the current `permission:` format,
+  preserving its effective allow/deny behavior.
 - No qwen models. No `:discounted` kilo variants. No `kilo/anthropic|openai/*` passthrough for company code.
 - Superproject git repo is `~/.dotfiles` (remote `github.com:dragenet/dotfiles`); submodules register in `~/.dotfiles/.gitmodules` with `opencode/config/<name>` paths.
 - Verification runs use `OPENCODE_CONFIG` pointed at a throwaway local layer where a model is required; never commit secrets.

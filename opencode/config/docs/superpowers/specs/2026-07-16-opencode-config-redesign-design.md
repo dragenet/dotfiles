@@ -44,9 +44,10 @@ config), `git` (already in the live config), and **new** `graphify` +
 
 Built-in: `plan` (read-only, defined in `opencode.json`).
 
-**Frontmatter style:** intentionally mixed — a simple `tools:` map for simple/
-low-risk agents (colleague's style), full `permission.*` maps for complex or
-safety-sensitive agents (`git`, `graphify`, `autopilot`, MCP operators).
+**Permissions format:** use `permission:` everywhere. OpenCode deprecated the
+legacy boolean `tools:` format; simple agents use shorthand permission values
+and safety-sensitive agents (`git`, `graphify`, `autopilot`, MCP operators)
+use detailed pattern maps where needed.
 
 ---
 
