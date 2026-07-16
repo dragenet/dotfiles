@@ -9,7 +9,7 @@ before changing configuration, agents, skills, or scripts.
 
 ```text
 ~/.dotfiles/opencode/config/
-├── opencode.json                    # Shared config: plugins, permissions, agents, MCP
+├── opencode.jsonc                   # Shared config: plugins, permissions, agents, MCP
 ├── opencode.local.*.example.json    # Per-machine model/provider templates
 ├── dcp.jsonc                        # Dynamic Context Pruning configuration
 ├── AGENTS.md                        # Staged global instructions
@@ -27,7 +27,7 @@ before changing configuration, agents, skills, or scripts.
 └── secrets/                         # Gitignored machine-local secret files
 ```
 
-The shared `opencode.json` has no model, small-model, or machine-specific
+The shared `opencode.jsonc` has no model, small-model, or machine-specific
 provider configuration. Copy the appropriate example to the gitignored
 `opencode.local.json` and load it through `OPENCODE_CONFIG`. See
 `docs/model-selection.md` for the four-provider model table and assignment
@@ -44,7 +44,7 @@ The staged roster has 23 custom agents plus OpenCode's built-in read-only
 `graphify-out/`. The capability is opt-in per project; see
 `docs/graphify-project-optin.md`.
 
-Use `permission:` in agent frontmatter and `opencode.json` for all access
+Use `permission:` in agent frontmatter and `opencode.jsonc` for all access
 rules. The deprecated access-map configuration format is not used.
 
 ## Documentation Lookups
@@ -80,7 +80,7 @@ of lookup queries.
 There is no build system. For configuration changes, run:
 
 ```bash
-python3 -c "import json; json.load(open('opencode.json')); print('valid')"
+python3 -c "import json; json.load(open('opencode.jsonc')); print('valid')"
 bash scripts/check-skill-whitelists.sh
 ```
 

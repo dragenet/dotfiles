@@ -1,6 +1,6 @@
 # Provenance
 
-This directory's initial structure (`opencode.json`, `AGENTS.md`, `agents/*.md`,
+This directory's initial structure (`opencode.jsonc`, `AGENTS.md`, `agents/*.md`,
 `docs/`, `scripts/`, `secrets/`, `skill/`) was vendored from:
 
 - Source: https://github.com/jabbas/opencode-config

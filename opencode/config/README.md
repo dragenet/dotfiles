@@ -5,7 +5,7 @@ system, skill repositories (git submodules), custom agents, MCP servers, and
 memory. It is not the live `~/.config/opencode` configuration yet.
 
 This config is designed to run **identically on multiple machines** (e.g. a private
-and a work laptop). The shared base (`opencode.json`, agents, skills, docs) is the
+and a work laptop). The shared base (`opencode.jsonc`, agents, skills, docs) is the
 same everywhere; everything machine-specific lives in two gitignored files:
 `opencode.local.json` (models/providers) and `secrets/*` (keys/URLs).
 
@@ -15,17 +15,17 @@ same everywhere; everything machine-specific lives in two gitignored files:
 
 | File | Tracked? | Same on every machine? | Holds |
 |------|----------|------------------------|-------|
-| `opencode.json` | yes | **yes (identical)** | agents, MCP servers, skills, permissions, tool gating |
+| `opencode.jsonc` | yes | **yes (identical)** | agents, MCP servers, skills, permissions, tool gating |
 | `opencode.local.json` | no (gitignored) | no | `model`, `small_model`, `provider` block, per-agent model overrides |
 | `secrets/*` | no (gitignored) | no | API keys and infra URLs (`{file:secrets/...}`) |
 | `.envrc` | no (gitignored) | no | optional direnv loader for `OPENCODE_CONFIG` |
 
-At runtime OpenCode loads `opencode.json`, then deep-merges `opencode.local.json`
+At runtime OpenCode loads `opencode.jsonc`, then deep-merges `opencode.local.json`
 on top (via the `OPENCODE_CONFIG` env var). The local layer wins per-key, so it can
 set models/providers without touching the shared base.
 
 `{file:secrets/...}` references resolve **relative to the config directory**, so the
-same `opencode.json` automatically reads each machine's own `secrets/`.
+same `opencode.jsonc` automatically reads each machine's own `secrets/`.
 
 ---
 
@@ -177,7 +177,7 @@ OPENCODE_CONFIG="$HOME/.config/opencode/opencode.local.json" opencode
 See `AGENTS.md` for the full agent roster, per-agent skill whitelists, and MCP
 wiring. Key points:
 
-- MCP permission patterns are denied globally in `opencode.json` and allowed
+- MCP permission patterns are denied globally in `opencode.jsonc` and allowed
   only inside their specialist agent (`ha`, `jira`, `stitch-mcp`,
   `webscraper`/`webresearcher`/`webmonitor`, `webdebugger`).
 - `jira` and `stitch-mcp` are MCP-operator agents; `stitch` is the separate
@@ -189,7 +189,7 @@ wiring. Key points:
 
 ```bash
 # config is valid JSON
-jq empty opencode.json && jq empty opencode.local.json && echo OK
+jq empty opencode.jsonc && jq empty opencode.local.json && echo OK
 
 # the local layer is being applied (run with OPENCODE_CONFIG set)
 opencode --version
@@ -198,8 +198,8 @@ opencode --version
 To confirm two machines share an identical base:
 
 ```bash
-diff <(jq -S . ~/.config/opencode-priv/opencode.json) \
-     <(jq -S . ~/.config/opencode/opencode.json) && echo "IDENTICAL BASE"
+diff <(jq -S . ~/.config/opencode-priv/opencode.jsonc) \
+     <(jq -S . ~/.config/opencode/opencode.jsonc) && echo "IDENTICAL BASE"
 ```
 
 ---
@@ -208,7 +208,7 @@ diff <(jq -S . ~/.config/opencode-priv/opencode.json) \
 
 ```
 ~/.config/opencode/
-├── opencode.json          # shared base (tracked, identical everywhere)
+├── opencode.jsonc         # shared base (tracked, identical everywhere)
 ├── opencode.local.json    # per-machine models/providers (gitignored)
 ├── .envrc                 # optional direnv loader (gitignored)
 ├── AGENTS.md              # agent roster + conventions

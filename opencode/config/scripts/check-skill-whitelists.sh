@@ -3,7 +3,7 @@
 # check-skill-whitelists.sh
 #
 # Verifies that every skill referenced in an agent's permission.skill whitelist
-# (agent.<name>.permission.skill == "allow" in opencode.json) corresponds to a
+# (agent.<name>.permission.skill == "allow" in opencode.jsonc) corresponds to a
 # real skill on disk, a known built-in, or — for wildcard patterns — matches at
 # least one on-disk skill.
 #
@@ -21,7 +21,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG="$REPO_ROOT/opencode.json"
+CONFIG="$REPO_ROOT/opencode.jsonc"
 
 # Built-in skills registered in OpenCode source (NOT SKILL.md files on disk).
 # See skill/index.ts (CUSTOMIZE_OPENCODE_SKILL_NAME).
@@ -32,7 +32,7 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 if [[ ! -f "$CONFIG" ]]; then
-  echo "[FAIL] opencode.json not found at $CONFIG" >&2
+  echo "[FAIL] opencode.jsonc not found at $CONFIG" >&2
   exit 1
 fi
 

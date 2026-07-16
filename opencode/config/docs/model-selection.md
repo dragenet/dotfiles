@@ -9,10 +9,10 @@ standalone, expanded form. If the two ever disagree, the spec wins.
 
 ## 1. Overview
 
-The shared, tracked `opencode.json` carries **no** `model`, `small_model`, or
+The shared, tracked `opencode.jsonc` carries **no** `model`, `small_model`, or
 machine-specific `provider` block. Those live in a per-machine, gitignored
 `opencode.local.json`, deep-merged on top of the base config via the
-`OPENCODE_CONFIG` env var. This keeps the same `opencode.json` fully portable
+`OPENCODE_CONFIG` env var. This keeps the same `opencode.jsonc` fully portable
 between the personal machine and the work machine, while each machine picks
 its own models and providers.
 

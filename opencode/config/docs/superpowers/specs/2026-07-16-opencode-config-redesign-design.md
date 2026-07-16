@@ -42,7 +42,7 @@ Added by this user (4): `web-fast-context` (already migrated to the live
 config), `git` (already in the live config), and **new** `graphify` +
 `graphify-extractor` (§10).
 
-Built-in: `plan` (read-only, defined in `opencode.json`).
+Built-in: `plan` (read-only, defined in `opencode.jsonc`).
 
 **Permissions format:** use `permission:` everywhere. OpenCode deprecated the
 legacy boolean `tools:` format; simple agents use shorthand permission values
@@ -53,7 +53,7 @@ use detailed pattern maps where needed.
 
 ## 3. Model & provider layer
 
-The shared, tracked `opencode.json` carries **no** `model`/`small_model`/
+The shared, tracked `opencode.jsonc` carries **no** `model`/`small_model`/
 machine-specific `provider` block. Those live in a per-machine, gitignored
 `opencode.local.json`, deep-merged via the `OPENCODE_CONFIG` env var.
 
@@ -173,7 +173,7 @@ in the `AGENTS.md` context7 block.
 
 ## 6. Plugins
 
-`opencode.json` `plugin` array:
+`opencode.jsonc` `plugin` array:
 
 | Plugin | Choice / notes |
 |---|---|
@@ -202,7 +202,7 @@ plugin hook.
 
 ### Bash approval — broad native baseline; `claude-bash-approve` deferred
 
-- **Native baseline (intentional):** `opencode.json` `bash` default is
+- **Native baseline (intentional):** `opencode.jsonc` `bash` default is
   **`allow`**, matching the user's broad-autonomy preference.
 - **Native hard `deny` backstop** for catastrophic commands (`rm -rf`, `dd`,
   `mkfs`, `reboot`/`shutdown`/`poweroff`, `git push --force`, `terraform

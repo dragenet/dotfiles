@@ -4,7 +4,7 @@
 
 **Goal:** Turn the raw-vendored `~/.dotfiles/opencode/config/` tree into a complete, loadable, cost/performance-optimized OpenCode global config per the approved design (`docs/superpowers/specs/2026-07-16-opencode-config-redesign-design.md`).
 
-**Architecture:** A single shared `opencode.json` (no models) + submodule-vendored superpowers/skills + a per-machine `opencode.local.json` model layer, a 23-agent roster, six plugins, a graphify orchestrator/worker pair, and CLI-based context7. Each phase leaves the config loadable.
+**Architecture:** A single shared `opencode.jsonc` (no models) + submodule-vendored superpowers/skills + a per-machine `opencode.local.json` model layer, a 23-agent roster, six plugins, a graphify orchestrator/worker pair, and CLI-based context7. Each phase leaves the config loadable.
 
 **Tech Stack:** OpenCode 1.18.2, JSON/JSONC config, Markdown agent/skill files, git submodules, Bash verification scripts, `uv`-installed `graphifyy` CLI.
 
@@ -12,7 +12,7 @@
 
 - Config root is `~/.dotfiles/opencode/config/` — the future `~/.config/opencode` symlink target. All relative paths below are from this root unless stated.
 - **Do NOT** touch the live `~/.config/opencode`, `~/.dotfiles/bootstrap.sh`, or `infra-flux`. No symlink, no `opencode.local.json` with real secrets, no `git commit` unless the user explicitly asks.
-- Shared `opencode.json` carries **no** `model`/`small_model`/machine `provider` block.
+- Shared `opencode.jsonc` carries **no** `model`/`small_model`/machine `provider` block.
 - Do not use legacy boolean `tools:` configuration. Migrate every existing agent
   file and `opencode.json` tool override to the current `permission:` format,
   preserving its effective allow/deny behavior.
@@ -25,7 +25,7 @@
 
 ## Phase 1 — Foundation & vendoring
 
-Registers submodules inside `config/`, wires the superpowers plugin + skill discovery symlinks, and vendors the graphify skill, so the existing `opencode.json` skill whitelists resolve on disk.
+Registers submodules inside `config/`, wires the superpowers plugin + skill discovery symlinks, and vendors the graphify skill, so the existing `opencode.jsonc` skill whitelists resolve on disk.
 
 ### Task 1.1: Reconcile the inert `.gitmodules` and register submodules under `config/`
 
@@ -153,7 +153,7 @@ Expected: frontmatter with `name: graphify`, and 8 reference files.
 - [ ] **Step 1: Run the whitelist checker**
 
 Run (from `config/`): `bash scripts/check-skill-whitelists.sh; echo "exit=$?"`
-Expected: `exit=0`. Any `[ERROR]` lines name a whitelisted skill that doesn't resolve — fix by correcting the symlink target (Task 1.3) or the whitelist entry in `opencode.json`. `[INFO]` orphan lines are acceptable.
+Expected: `exit=0`. Any `[ERROR]` lines name a whitelisted skill that doesn't resolve — fix by correcting the symlink target (Task 1.3) or the whitelist entry in `opencode.jsonc`. `[INFO]` orphan lines are acceptable.
 
 ---
 

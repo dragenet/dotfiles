@@ -1,6 +1,6 @@
 # Secrets
 
-This directory contains API keys and tokens referenced by `opencode.json` via `{file:...}` syntax.
+This directory contains API keys and tokens referenced by `opencode.jsonc` via `{file:...}` syntax.
 
 Context7 documentation lookups use `npx ctx7@latest library ...`, then
 `npx ctx7@latest docs ...`, per `AGENTS.md`. No Context7 server or Context7
