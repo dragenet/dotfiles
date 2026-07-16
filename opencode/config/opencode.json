@@ -109,7 +109,8 @@
           "subagent-driven-development": "allow",
           "dispatching-parallel-agents": "allow",
           "verification-before-completion": "allow",
-          "requesting-code-review": "allow"
+          "requesting-code-review": "allow",
+          "graphify": "allow"
         }
       }
     },
@@ -163,7 +164,8 @@
           "pdf": "allow",
           "xlsx": "allow",
           "claude-api": "allow",
-          "customize-opencode": "allow"
+          "customize-opencode": "allow",
+          "graphify": "allow"
         }
       }
     },
@@ -178,7 +180,8 @@
           "*": "deny",
           "using-superpowers": "allow",
           "brainstorming": "allow",
-          "writing-plans": "allow"
+          "writing-plans": "allow",
+          "graphify": "allow"
         }
       }
     },
