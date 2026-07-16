@@ -30,7 +30,7 @@ Application debugging:
 - Identify the exact line and condition causing the issue
 
 Guidelines:
-- Use context7 MCP for error message lookups and library behavior
+- Use the ctx7 CLI per AGENTS.md for error message lookups and library behavior
 - Always show the exact commands you ran and their output
 - Never modify files or apply cluster changes — diagnosis only
 - End every session with a clear root cause statement and recommended fix

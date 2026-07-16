@@ -2,11 +2,14 @@
 
 This directory contains API keys and tokens referenced by `opencode.json` via `{file:...}` syntax.
 
+Context7 documentation lookups use `npx ctx7@latest library ...`, then
+`npx ctx7@latest docs ...`, per `AGENTS.md`. No Context7 server or Context7
+secret is required.
+
 ## Required files
 
 | File | Description |
 |------|-------------|
-| `context7.key` | Context7 API key |
 | `github.pat` | GitHub Personal Access Token |
 | `homeassistant.token` | Home Assistant long-lived access token (without "Bearer " prefix) |
 | `homeassistant.url` | Home Assistant MCP endpoint URL (infrastructure — treated as secret) |
@@ -22,7 +25,6 @@ This directory contains API keys and tokens referenced by `opencode.json` via `{
 On a new machine, create each file with your secret value (no trailing newline):
 
 ```bash
-printf '%s' 'your-api-key-here'                   > secrets/context7.key
 printf '%s' 'your-pat-here'                        > secrets/github.pat
 printf '%s' 'your-jwt-here'                        > secrets/homeassistant.token
 printf '%s' 'https://ha.example.com/api/mcp'       > secrets/homeassistant.url

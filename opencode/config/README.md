@@ -76,9 +76,12 @@ the `provider` block for this machine (leave `{}` if none).
 Each file holds a single value with **no trailing newline** (use `printf '%s'`).
 All files in `secrets/` except `README.md` are gitignored.
 
+Context7 documentation lookups use `npx ctx7@latest library ...`, then
+`npx ctx7@latest docs ...`, per `AGENTS.md`. No Context7 server or Context7
+secret is required.
+
 | File | Description |
 |------|-------------|
-| `context7.key` | Context7 API key |
 | `github.pat` | GitHub Personal Access Token (only if the `github` MCP is enabled) |
 | `homeassistant.token` | Home Assistant long-lived token (without `Bearer ` prefix) |
 | `homeassistant.url` | Home Assistant MCP endpoint URL |
@@ -91,7 +94,6 @@ All files in `secrets/` except `README.md` are gitignored.
 
 ```bash
 cd ~/.config/opencode
-printf '%s' 'your-key'                            > secrets/context7.key
 printf '%s' 'your-jwt'                            > secrets/homeassistant.token
 printf '%s' 'https://ha.example.com/api/mcp'      > secrets/homeassistant.url
 printf '%s' 'https://firecrawl.example.internal'  > secrets/firecrawl.url
