@@ -79,12 +79,18 @@ of lookup queries.
 
 ## Plugins And Runtime Behavior
 
-- `opencode-mnemosyne` provides persistent memory routing described in
-  `docs/memory-rules.md`.
+- `opencode-mem` provides persistent memory (local vector DB, auto-capture,
+  and a `memory` tool) described in `docs/memory-rules.md`. Its own config
+  lives at `~/.config/opencode/opencode-mem.jsonc` (gitignored, per-machine);
+  copy `opencode-mem.personal.example.jsonc` or `opencode-mem.work.example.jsonc`
+  to `opencode-mem.jsonc` and adjust.
 - `opencode-caffeinate` keeps macOS awake while OpenCode sessions are active.
 - `opencode-background-agents` uses the strict read-only implementation:
-  background delegations cannot edit files or run bash. Use native `task`
-  delegation for work with side effects.
+  background delegations cannot edit files or run bash. Reserve background
+  delegation only for genuinely long-running asynchronous jobs (e.g. slow
+  read-only research or analysis that would otherwise block the session).
+  For everything else, including any work with side effects, default to
+  standard native `task` delegation instead.
 - `@tarquinen/opencode-dcp@latest` supplies Dynamic Context Pruning; its
   `dcp.jsonc` settings are the primary context-management policy, with native
   compaction retained as a fallback floor.
