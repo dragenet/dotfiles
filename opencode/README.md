@@ -17,6 +17,7 @@ same everywhere; everything machine-specific lives in two gitignored files:
 |------|----------|------------------------|-------|
 | `opencode.jsonc` | yes | **yes (identical)** | agents, MCP servers, skills, permissions, tool gating |
 | `opencode.local.jsonc` | no (gitignored) | no | `model`, `small_model`, `provider` block, per-agent model overrides |
+| `opencode-mem.jsonc` | no (gitignored) | no | opencode-mem plugin config: storage path, embedding model, auto-capture provider |
 | `secrets/*` | no (gitignored) | no | API keys and infra URLs (`{file:secrets/...}`) |
 | `.envrc` | no (gitignored) | no | optional direnv loader for `OPENCODE_CONFIG` |
 
@@ -84,6 +85,18 @@ cp ~/.config/opencode/opencode.local.personal.example.jsonc ~/.config/opencode/o
 # Or, on a work machine:
 cp ~/.config/opencode/opencode.local.work.example.jsonc ~/.config/opencode/opencode.local.jsonc
 ```
+
+### 1b. Create `opencode-mem.jsonc`
+
+```bash
+cp ~/.config/opencode/opencode-mem.personal.example.jsonc ~/.config/opencode/opencode-mem.jsonc
+# Or, on a work machine:
+cp ~/.config/opencode/opencode-mem.work.example.jsonc ~/.config/opencode/opencode-mem.jsonc
+```
+
+The plugin also writes a full commented template to this path on first startup
+if the file does not already exist, so this step just seeds the provider/scope
+defaults ahead of time.
 
 ### 2. Fill in secrets
 
@@ -210,7 +223,10 @@ diff <(jq -S . ~/.config/opencode-priv/opencode.jsonc) \
 ~/.config/opencode/
 ├── opencode.jsonc         # shared base (tracked, identical everywhere)
 ├── opencode.local.jsonc    # per-machine models/providers (gitignored)
+├── opencode-mem.jsonc     # opencode-mem plugin config (gitignored)
 ├── .envrc                 # optional direnv loader (gitignored)
+├── opencode-mem.personal.example.jsonc  # opencode-mem config template (personal)
+├── opencode-mem.work.example.jsonc      # opencode-mem config template (work)
 ├── AGENTS.md              # agent roster + conventions
 ├── agents/               # agent definitions (*.md)
 ├── docs/                 # rules, specs, plans
