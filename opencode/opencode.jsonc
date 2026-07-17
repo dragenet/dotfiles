@@ -9,6 +9,8 @@
     "prune": true,
     "reserved": 10000
   },
+  "formatter": true,
+  "lsp": true,
   "plugin": [
     "opencode-mnemosyne",
     "opencode-anthropic-oauth",
