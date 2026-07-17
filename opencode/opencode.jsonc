@@ -63,8 +63,7 @@
     },
     "external_directory": {
       "*": "ask",
-      "~/.config/opencode/**": "allow",
-      "~/.dotfiles/opencode/**": "allow"
+      "~/.config/opencode/**": "allow"
     },
     "playwright_*": "deny",
     "homeassistant_*": "deny",

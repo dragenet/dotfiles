@@ -11,7 +11,9 @@ permission:
   list: deny
   bash: deny
   task: deny
-  external_directory: deny
+  external_directory:
+    "*": deny
+    "~/.config/opencode/**": allow
   todowrite: deny
   question: deny
   lsp: deny

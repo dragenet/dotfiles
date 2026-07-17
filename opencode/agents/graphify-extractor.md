@@ -13,7 +13,9 @@ permission:
     "*": deny
   skill:
     "*": deny
-  external_directory: ask
+  external_directory:
+    "*": ask
+    "~/.config/opencode/**": allow
 steps: 20
 ---
 

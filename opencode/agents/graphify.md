@@ -11,7 +11,9 @@ permission:
   task:
     "*": deny
     graphify-extractor: allow
-  external_directory: ask
+  external_directory:
+    "*": ask
+    "~/.config/opencode/**": allow
   skill:
     "*": deny
     graphify: allow
