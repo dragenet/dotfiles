@@ -8,7 +8,6 @@ permission:
   edit: allow
   glob: allow
   grep: allow
-  bash: allow
   task:
     "*": deny
   skill:

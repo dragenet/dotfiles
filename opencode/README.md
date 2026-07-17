@@ -215,8 +215,10 @@ diff <(jq -S . ~/.config/opencode-priv/opencode.jsonc) \
 ├── agents/               # agent definitions (*.md)
 ├── docs/                 # rules, specs, plans
 ├── secrets/              # API keys/URLs (gitignored; {file:...} refs)
-├── plugins/              # superpowers.js symlink
+├── plugins/              # superpowers.js symlink; bash-approve.ts (gitignored, per-machine)
 ├── skills/               # skill-discovery symlinks
+├── scripts/              # install-bash-approve.sh, check-skill-whitelists.sh
 └── superpowers/, anthropics-skills/, cloudflare-skills/,
-    stitch-skills/, awesome-agent-skills/   # skill submodules
+    stitch-skills/, awesome-agent-skills/, jenkins-cli/,
+    claude-bash-approve/  # skill/tool submodules
 ```

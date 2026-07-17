@@ -4,7 +4,6 @@ description: Full-stack debugging - cluster events, pod logs, application errors
 permission:
   read: allow
   edit: deny
-  bash: allow
   glob: allow
   grep: allow
 ---

@@ -4,7 +4,6 @@ description: Documentation and communications - technical docs, specs, proposals
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

@@ -16,3 +16,6 @@
 [submodule "opencode/config/jenkins-cli"]
 	path = opencode/jenkins-cli
 	url = https://github.com/avivsinai/jenkins-cli.git
+[submodule "opencode/config/claude-bash-approve"]
+	path = opencode/claude-bash-approve
+	url = https://github.com/mariusvniekerk/claude-bash-approve.git

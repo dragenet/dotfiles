@@ -4,7 +4,6 @@ description: CI/CD, GitOps, Kubernetes - GitHub Actions, Flux, Helm charts, mani
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

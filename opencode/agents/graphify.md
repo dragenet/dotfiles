@@ -8,7 +8,6 @@ permission:
   edit: deny
   glob: allow
   grep: allow
-  bash: allow
   task:
     "*": deny
     graphify-extractor: allow

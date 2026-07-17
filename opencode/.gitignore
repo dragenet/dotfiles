@@ -18,6 +18,9 @@ session-*.md
 # Per-machine config layer (loaded via OPENCODE_CONFIG)
 opencode.local.jsonc
 
+# Per-machine generated plugin (embeds an absolute, machine-specific hook path)
+plugins/bash-approve.ts
+
 # direnv
 .envrc
 .direnv/

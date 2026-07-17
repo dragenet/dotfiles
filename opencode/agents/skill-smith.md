@@ -4,7 +4,6 @@ description: Meta-engineering - create and improve OpenCode/Claude skills, build
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

@@ -88,9 +88,29 @@ of lookup queries.
 - `@tarquinen/opencode-dcp@latest` supplies Dynamic Context Pruning; its
   `dcp.jsonc` settings are the primary context-management policy, with native
   compaction retained as a fallback floor.
-- `claude-bash-approve` has been verified only in isolated classifier tests.
-  Its active deployment remains deferred; the native broad Bash `allow` default
-  plus explicit catastrophic-command denies is the current baseline.
+- `claude-bash-approve` (vendored as the `claude-bash-approve/` submodule) is
+  the active bash approval gate. `permission.bash.*` is `"ask"` at the global
+  level (and inherited by every agent that does not declare its own `bash`
+  ruleset), so the classifier's `permission.asked` hook — not a broad native
+  `allow` — makes the real allow/deny/ask decision for anything not already
+  covered by an explicit pattern. Explicit native `allow` entries (read-only
+  commands, `ctx7`) and hard `deny` entries (`rm -rf`, `terraform destroy`,
+  etc.) still take precedence over the plugin, since the plugin only fires
+  when the native ruleset would otherwise prompt.
+  Run `scripts/install-bash-approve.sh` once per machine after cloning and
+  initializing submodules — it builds/installs the Go runtime to
+  `~/.local/share/claude-bash-approve` and renders the gitignored
+  `plugins/bash-approve.ts` with that machine's hook path. Restart OpenCode
+  afterward; config loads only at startup.
+- No agent `.md` frontmatter may declare a flat `bash: allow` (or any other
+  flat `allow` for a permission key with global hard denies). A flat value
+  becomes a single `{pattern: "*", action: allow}` rule appended after the
+  global ruleset, which wins over every hard deny for that agent regardless
+  of specificity — verified empirically against OpenCode 1.18.2's `evaluate()`
+  (`findLast` over the concatenated array). Agents needing bash access rely on
+  the inherited global ruleset, or declare their own `bash` object (not a
+  flat string) with an explicit `"*"` action plus overrides, as `debugger`,
+  `devops`, `jenkins`, `git`, `autopilot`, and `reviewer` do.
 
 ## Validation
 

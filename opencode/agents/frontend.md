@@ -4,7 +4,6 @@ description: Frontend and visual design - UI components, web artifacts, generati
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

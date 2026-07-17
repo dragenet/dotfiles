@@ -4,7 +4,6 @@ description: General-purpose software and DevOps engineer; fallback when no spec
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

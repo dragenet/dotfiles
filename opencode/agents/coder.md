@@ -4,7 +4,6 @@ description: Polyglot coding - Go, Python, TypeScript and others; TDD, refactori
 permission:
   read: allow
   edit: allow
-  bash: allow
   glob: allow
   grep: allow
 ---

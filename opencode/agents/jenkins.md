@@ -5,7 +5,6 @@ hidden: true
 permission:
   read: allow
   edit: deny
-  bash: allow
   glob: allow
   grep: allow
 ---
