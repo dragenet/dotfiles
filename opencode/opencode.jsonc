@@ -41,6 +41,7 @@
       "git status *": "allow",
       "git diff *": "allow",
       "git branch *": "allow",
+      "git push*": "ask",
       "npx ctx7*": "allow",
       "ctx7*": "allow",
       "rm -rf*": "deny",
@@ -50,6 +51,9 @@
       "shutdown*": "deny",
       "poweroff*": "deny",
       "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git push * --force*": "deny",
+      "git push * -f*": "deny",
       "terraform destroy*": "deny"
     },
     "read": {
@@ -87,7 +91,15 @@
     "autopilot": {
       "mode": "primary",
       "permission": {
-        "bash": "deny",
+        "bash": {
+          "*": "deny",
+          "git push": "allow",
+          "git push *": "allow",
+          "git push --force*": "deny",
+          "git push -f*": "deny",
+          "git push * --force*": "deny",
+          "git push * -f*": "deny"
+        },
         "edit": {
           "*": "deny",
           ".agents/superpowers/**": "allow"
