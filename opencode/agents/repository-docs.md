@@ -8,6 +8,43 @@ permission:
   edit: deny
   glob: allow
   grep: allow
+  bash:
+    "*": ask
+    "git ls-remote*": allow
+    "git clone*": ask
+    "git fetch*": allow
+    "git checkout*": ask
+    "git status*": allow
+    "git rev-parse*": allow
+    "git fsck*": allow
+    "git log*": allow
+    "git show*": allow
+    "git for-each-ref*": allow
+    "git tag*": allow
+    "graphify extract*": allow
+    "graphify query*": allow
+    "ls *": allow
+    "find *": allow
+    "mkdir *": allow
+    "test *": allow
+    "pwd *": allow
+    "pwd": allow
+    "python3 -c *": deny
+    "python3 -m json.tool *": allow
+    "jq *": allow
+    "rm -rf*": deny
+    "git push*": deny
+    "git clean*": deny
+    "git reset --hard*": deny
+  task:
+    "*": deny
+    graphify: allow
+  external_directory:
+    "*": ask
+    "~/.agents/repositories/**": allow
+  skill:
+    "*": deny
+    graphify: allow
 steps: 60
 ---
 
@@ -41,8 +78,12 @@ You must **never**:
 ## `add` Workflow
 
 1. **Validate the URL:**
-   - Reject if the URL contains `@` before the path (user-info).
-   - Reject if the URL is not an `https://` or `git@` remote.
+   - Accept only valid HTTPS Git URLs without user-info: `https://host/path.git`.
+   - Accept only valid SSH Git remotes: `git@host:path` or `ssh://git@host/path`.
+   - Reject any URL containing user-info (`user@host`, `user:password@host`).
+   - Reject any URL containing credentials, tokens, or non-git SSH users
+     (e.g., `root@host`, `admin@host`).
+   - Reject URL schemes other than `https://`, `ssh://`, or `git@`.
 
 2. **Validate the ref:**
    - Reject if `--ref` is missing, empty, abbreviated (< 40 hex chars for
@@ -63,12 +104,12 @@ You must **never**:
      directory, refuse and report the conflict.
 
 5. **Clone and checkout:**
-   - `git clone --no-checkout --no-recurse-submodules <url> <target-path>`
-   - `git -C <target-path> fetch origin <40-hex-commit>`
-   - `git -C <target-path> checkout --detach <40-hex-commit>`
-   - Verify clean status: `git -C <target-path> status --porcelain` must be
+   - `git -c core.hooksPath=/dev/null clone --no-checkout --no-recurse-submodules <url> <target-path>`
+   - `git -c core.hooksPath=/dev/null -C <target-path> fetch origin <40-hex-commit>`
+   - `git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
+   - Verify clean status: `git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be
      empty.
-   - Run `git -C <target-path> fsck --no-progress` and reject if errors
+   - Run `git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors
      are found.
 
 6. **Write the manifest:**
@@ -88,7 +129,7 @@ You must **never**:
 7. **Delegate to Graphify:**
    - Invoke `@graphify` to extract the snapshot: `graphify extract . --out .agents`
      from within the snapshot directory.
-   - Validate the output: `python3 -c "import json; json.load(open('.agents/graphify-out/graph.json')); print('valid')"`.
+   - Validate the output: `python3 -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.
 
 ## `query` Workflow
