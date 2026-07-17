@@ -71,10 +71,13 @@ Route Jenkins controller actions through `@jenkins`; do not run the `jk` CLI
 outside that specialist. Persistent-memory behavior is limited to the routing
 rules in `docs/memory-rules.md`.
 
-Background delegation is strictly read-only. Use native `task` delegation for
-work that writes files or runs bash. The global Bash default is `ask`; the
-vendored `claude-bash-approve` classifier is the active approval gate for
-anything not covered by an explicit native `allow`/`deny` pattern (see
+Background delegation is strictly read-only, and reserved only for genuinely
+long-running asynchronous jobs; use it sparingly. For everything else —
+including any work that writes files or runs bash — default to standard
+native `task` delegation (the `Task` tool / `@agent-name` invocation), not
+background delegation. The global Bash default is `ask`; the vendored
+`claude-bash-approve` classifier is the active approval gate for anything not
+covered by an explicit native `allow`/`deny` pattern (see
 `docs/dev-guide.md`). Run `scripts/install-bash-approve.sh` once per machine.
 
 After a staged configuration change is eventually deployed, restart OpenCode:
