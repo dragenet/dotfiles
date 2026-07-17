@@ -1,0 +1,610 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "docs/global-rules.md",
+    "docs/memory-rules.md"
+  ],
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+  "plugin": [
+    "opencode-mnemosyne",
+    "opencode-anthropic-oauth",
+    "opencode-caffeinate",
+    "opencode-background-agents",
+    "@tarquinen/opencode-dcp@latest"
+  ],
+  "permission": {
+    "edit": "ask",
+    "task": {
+      "autopilot": "deny"
+    },
+    "bash": {
+      "*": "allow",
+      "cat *": "allow",
+      "echo *": "allow",
+      "grep *": "allow",
+      "wc *": "allow",
+      "pwd": "allow",
+      "pwd *": "allow",
+      "find . *": "allow",
+      "find ./ *": "allow",
+      "head *": "allow",
+      "sort *": "allow",
+      "ls *": "allow",
+      "git log *": "allow",
+      "tail *": "allow",
+      "jq *": "allow",
+      "yq *": "allow",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git branch *": "allow",
+      "npx ctx7*": "allow",
+      "ctx7*": "allow",
+      "rm -rf*": "deny",
+      "dd *": "deny",
+      "mkfs*": "deny",
+      "reboot*": "deny",
+      "shutdown*": "deny",
+      "poweroff*": "deny",
+      "git push --force*": "deny",
+      "terraform destroy*": "deny"
+    },
+    "read": {
+      "*": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "~/.config/opencode/**": "allow",
+      "~/.dotfiles/opencode/**": "allow"
+    },
+    "playwright_*": "deny",
+    "homeassistant_*": "deny",
+    "chrome-devtools_*": "deny",
+    "firecrawl_*": "deny",
+    "jira_*": "deny",
+    "stitch_*": "deny",
+    "webfetch": "allow",
+    "websearch": "allow"
+  },
+  "agent": {
+    "plan": {
+      "prompt": "You are in PLAN MODE. Analyze the codebase thoroughly before making any changes. Do not execute any commands or write files. Only provide detailed analysis and plan.",
+      "steps": 15,
+      "permission": {
+        "bash": "deny",
+        "edit": "deny",
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "writing-plans": "allow"
+        }
+      }
+    },
+    "autopilot": {
+      "mode": "primary",
+      "permission": {
+        "bash": "deny",
+        "edit": {
+          "*": "deny",
+          ".agents/superpowers/**": "allow"
+        },
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "autonomous-execution": "allow",
+          "writing-plans": "allow",
+          "subagent-driven-development": "allow",
+          "dispatching-parallel-agents": "allow",
+          "verification-before-completion": "allow",
+          "requesting-code-review": "allow",
+          "graphify": "allow"
+        }
+      }
+    },
+    "coder": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "writing-plans": "allow",
+          "executing-plans": "allow",
+          "subagent-driven-development": "allow",
+          "dispatching-parallel-agents": "allow",
+          "test-driven-development": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow",
+          "requesting-code-review": "allow",
+          "receiving-code-review": "allow",
+          "using-git-worktrees": "allow",
+          "finishing-a-development-branch": "allow",
+          "claude-api": "allow",
+          "webapp-testing": "allow"
+        }
+      }
+    },
+    "general": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "writing-plans": "allow",
+          "executing-plans": "allow",
+          "subagent-driven-development": "allow",
+          "dispatching-parallel-agents": "allow",
+          "test-driven-development": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow",
+          "requesting-code-review": "allow",
+          "receiving-code-review": "allow",
+          "using-git-worktrees": "allow",
+          "finishing-a-development-branch": "allow",
+          "pdf": "allow",
+          "xlsx": "allow",
+          "claude-api": "allow",
+          "customize-opencode": "allow",
+          "graphify": "allow"
+        }
+      }
+    },
+    "architect": {
+      "permission": {
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "writing-plans": "allow",
+          "graphify": "allow"
+        }
+      }
+    },
+    "debugger": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "bash": {
+          "*": "ask",
+          "kubectl get *": "allow",
+          "kubectl describe *": "allow",
+          "kubectl logs *": "allow",
+          "kubectl top *": "allow",
+          "kubectl events *": "allow",
+          "flux get *": "allow",
+          "flux logs *": "allow",
+          "helm status *": "allow",
+          "helm history *": "allow",
+          "helm get *": "allow"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow"
+        }
+      }
+    },
+    "devops": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "bash": {
+          "*": "ask",
+          "git log *": "allow",
+          "git status *": "allow",
+          "git diff *": "allow",
+          "git branch *": "allow",
+          "gh pr list *": "allow",
+          "gh pr view *": "allow",
+          "gh run list *": "allow",
+          "gh run view *": "allow",
+          "gh workflow list *": "allow",
+          "gh workflow view *": "allow",
+          "kubectl get *": "allow",
+          "kubectl describe *": "allow",
+          "kubectl logs *": "allow",
+          "kubectl top *": "allow",
+          "helm template *": "allow",
+          "helm list *": "allow",
+          "helm status *": "allow",
+          "helm history *": "allow",
+          "flux get *": "allow",
+          "flux logs *": "allow",
+          "kustomize build *": "allow"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow",
+          "writing-plans": "allow",
+          "using-git-worktrees": "allow",
+          "finishing-a-development-branch": "allow"
+        }
+      }
+    },
+    "jenkins": {
+      "permission": {
+        "bash": {
+          "*": "ask",
+          "jk --version": "allow",
+          "jk version *": "allow",
+          "jk auth status*": "allow",
+          "jk context ls*": "allow",
+          "jk search *": "allow",
+          "jk job ls*": "allow",
+          "jk job view *": "allow",
+          "jk job config *": "allow",
+          "jk run ls *": "allow",
+          "jk run view *": "allow",
+          "jk run params *": "allow",
+          "jk run search *": "allow",
+          "jk log *": "allow",
+          "jk artifact ls *": "allow",
+          "jk test report *": "allow",
+          "jk cred ls*": "allow",
+          "jk node ls*": "allow",
+          "jk queue ls*": "allow",
+          "jk plugin ls*": "allow"
+        },
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "jk": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow"
+        }
+      }
+    },
+    "webdebugger": {
+      "permission": {
+        "playwright_*": "allow",
+        "chrome-devtools_*": "allow",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow",
+          "webapp-testing": "allow",
+          "web-perf": "allow"
+        }
+      }
+    },
+    "ha": {
+      "permission": {
+        "homeassistant_*": "allow",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow"
+        }
+      }
+    },
+    "webscraper": {
+      "permission": {
+        "firecrawl_firecrawl_scrape": "allow",
+        "firecrawl_firecrawl_map": "allow",
+        "firecrawl_firecrawl_crawl": "allow",
+        "firecrawl_firecrawl_check_crawl_status": "allow",
+        "firecrawl_firecrawl_interact": "allow",
+        "firecrawl_firecrawl_interact_stop": "allow",
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny"
+        }
+      }
+    },
+    "webresearcher": {
+      "permission": {
+        "firecrawl_firecrawl_search": "allow",
+        "firecrawl_firecrawl_search_feedback": "allow",
+        "firecrawl_firecrawl_scrape": "allow",
+        "firecrawl_firecrawl_map": "allow",
+        "firecrawl_firecrawl_agent": "allow",
+        "firecrawl_firecrawl_agent_status": "allow",
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny"
+        }
+      }
+    },
+    "webmonitor": {
+      "permission": {
+        "firecrawl_firecrawl_monitor_create": "allow",
+        "firecrawl_firecrawl_monitor_get": "allow",
+        "firecrawl_firecrawl_monitor_list": "allow",
+        "firecrawl_firecrawl_monitor_update": "allow",
+        "firecrawl_firecrawl_monitor_delete": "allow",
+        "firecrawl_firecrawl_monitor_run": "allow",
+        "firecrawl_firecrawl_monitor_checks": "allow",
+        "firecrawl_firecrawl_monitor_check": "allow",
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny"
+        }
+      }
+    },
+    "cloudflare": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "cloudflare": "allow",
+          "wrangler": "allow",
+          "workers-best-practices": "allow",
+          "durable-objects": "allow",
+          "agents-sdk": "allow",
+          "sandbox-sdk": "allow",
+          "cloudflare-email-service": "allow",
+          "turnstile-spin": "allow",
+          "web-perf": "allow"
+        }
+      }
+    },
+    "frontend": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "writing-plans": "allow",
+          "executing-plans": "allow",
+          "subagent-driven-development": "allow",
+          "dispatching-parallel-agents": "allow",
+          "test-driven-development": "allow",
+          "systematic-debugging": "allow",
+          "verification-before-completion": "allow",
+          "requesting-code-review": "allow",
+          "receiving-code-review": "allow",
+          "using-git-worktrees": "allow",
+          "finishing-a-development-branch": "allow",
+          "frontend-design": "allow",
+          "shadcn-ui": "allow",
+          "web-artifacts-builder": "allow",
+          "canvas-design": "allow",
+          "algorithmic-art": "allow",
+          "brand-guidelines": "allow",
+          "theme-factory": "allow",
+          "slack-gif-creator": "allow",
+          "webapp-testing": "allow"
+        }
+      }
+    },
+    "stitch": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "stitch::*": "allow",
+          "remotion": "allow",
+          "shadcn-ui": "allow",
+          "design-md": "allow",
+          "enhance-prompt": "allow",
+          "stitch-loop": "allow",
+          "taste-design": "allow"
+        }
+      }
+    },
+    "writer": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "brainstorming": "allow",
+          "doc-coauthoring": "allow",
+          "internal-comms": "allow",
+          "docx": "allow",
+          "pptx": "allow",
+          "pdf": "allow"
+        }
+      }
+    },
+    "skill-smith": {
+      "permission": {
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow",
+          "skill-creator": "allow",
+          "writing-skills": "allow",
+          "mcp-builder": "allow"
+        }
+      }
+    },
+    "jira": {
+      "permission": {
+        "jira_*": "allow",
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow"
+        }
+      }
+    },
+    "stitch-mcp": {
+      "permission": {
+        "stitch_*": "allow",
+        "bash": "deny",
+        "task": {
+          "*": "allow",
+          "autopilot": "deny"
+        },
+        "skill": {
+          "*": "deny",
+          "using-superpowers": "allow"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "github": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "enabled": false,
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{file:secrets/github.pat}"
+      }
+    },
+    "pdf-reader": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@sylphx/pdf-reader-mcp"
+      ],
+      "enabled": false
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "enabled": true
+    },
+    "dart-mcp-server": {
+      "type": "local",
+      "command": [
+        "dart",
+        "mcp-server"
+      ],
+      "enabled": false,
+      "environment": {}
+    },
+    "homeassistant": {
+      "type": "remote",
+      "url": "{file:secrets/homeassistant.url}",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {file:secrets/homeassistant.token}"
+      }
+    },
+    "firecrawl": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "enabled": true,
+      "environment": {
+        "FIRECRAWL_API_URL": "{file:secrets/firecrawl.url}",
+        "FIRECRAWL_API_KEY": "{file:secrets/firecrawl.key}"
+      }
+    },
+    "jira": {
+      "type": "local",
+      "command": [
+        "mcp-atlassian",
+        "--jira-url",
+        "{file:secrets/jira.url}",
+        "--jira-personal-token",
+        "{file:secrets/jira.token}"
+      ],
+      "enabled": true
+    },
+    "stitch": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@_davideast/stitch-mcp",
+        "proxy"
+      ],
+      "environment": {
+        "STITCH_API_KEY": "{file:secrets/stitch.key}"
+      },
+      "enabled": true
+    },
+    "tmux-mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "tmux-mcp"],
+      "enabled": true
+    }
+  }
+}

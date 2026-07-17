@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-6",
+  "small_model": "opencode-go/minimax-m3",
+  "agent": {
+    "architect":        { "model": "anthropic/claude-opus-4-8", "variant": "high" },
+    "debugger":         { "model": "anthropic/claude-opus-4-8", "variant": "high" },
+    "autopilot":        { "model": "anthropic/claude-sonnet-4-6", "variant": "medium" },
+    "general":          { "model": "anthropic/claude-sonnet-4-6", "variant": "medium" },
+    "devops":           { "model": "opencode-go/deepseek-v4-pro", "variant": "high" },
+    "skill-smith":      { "model": "openai/gpt-5.6-terra", "variant": "medium" },
+    "jenkins":          { "model": "anthropic/claude-sonnet-4-6", "variant": "low" },
+    "webdebugger":      { "model": "anthropic/claude-sonnet-4-6", "variant": "low" },
+    "coder":            { "model": "opencode-go/deepseek-v4-pro", "variant": "high" },
+    "cloudflare":       { "model": "opencode-go/deepseek-v4-pro", "variant": "high" },
+    "frontend":         { "model": "opencode-go/deepseek-v4-pro", "variant": "high" },
+    "stitch":           { "model": "opencode-go/deepseek-v4-pro", "variant": "high" },
+    "writer":           { "model": "anthropic/claude-sonnet-4-6", "variant": "low" },
+    "webresearcher":    { "model": "openai/gpt-5.6-luna", "variant": "medium" },
+    "reviewer":         { "model": "anthropic/claude-opus-4-8", "variant": "high" },
+    "web-fast-context": { "model": "opencode-go/deepseek-v4-flash" },
+    "webscraper":       { "model": "opencode-go/deepseek-v4-flash" },
+    "webmonitor":       { "model": "opencode-go/deepseek-v4-flash" },
+    "ha":               { "model": "opencode-go/deepseek-v4-flash" },
+    "jira":             { "model": "opencode-go/deepseek-v4-flash" },
+    "stitch-mcp":       { "model": "opencode-go/deepseek-v4-flash" },
+    "graphify":         { "model": "opencode-go/deepseek-v4-flash" },
+    "graphify-extractor": { "model": "opencode-go/deepseek-v4-flash" },
+    "git":              { "model": "opencode-go/minimax-m3", "variant": "off" }
+  }
+}

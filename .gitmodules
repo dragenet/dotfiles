@@ -1,18 +1,18 @@
 [submodule "opencode/config/superpowers"]
-	path = opencode/config/superpowers
+	path = opencode/superpowers
 	url = https://github.com/obra/superpowers.git
 [submodule "opencode/config/anthropics-skills"]
-	path = opencode/config/anthropics-skills
+	path = opencode/anthropics-skills
 	url = https://github.com/anthropics/skills.git
 [submodule "opencode/config/cloudflare-skills"]
-	path = opencode/config/cloudflare-skills
+	path = opencode/cloudflare-skills
 	url = https://github.com/cloudflare/skills.git
 [submodule "opencode/config/stitch-skills"]
-	path = opencode/config/stitch-skills
+	path = opencode/stitch-skills
 	url = https://github.com/google-labs-code/stitch-skills.git
 [submodule "opencode/config/awesome-agent-skills"]
-	path = opencode/config/awesome-agent-skills
+	path = opencode/awesome-agent-skills
 	url = https://github.com/VoltAgent/awesome-agent-skills.git
 [submodule "opencode/config/jenkins-cli"]
-	path = opencode/config/jenkins-cli
+	path = opencode/jenkins-cli
 	url = https://github.com/avivsinai/jenkins-cli.git

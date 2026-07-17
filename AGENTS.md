@@ -17,8 +17,8 @@ is `~/.config/opencode` (a separate, real directory — not a symlink from this
 repo). `opencode/` is a staging area for rebuilding it; it is not wired into
 `bootstrap.sh` and not symlinked anywhere.
 
-**Before making any change under `opencode/`, read
-`opencode/config/HANDOFF.md` in full.** It is a self-contained handoff: goal,
+**Before making any change under `opencode/`, read `opencode/HANDOFF.md` in
+full.** It is a self-contained handoff: goal,
 full discovery findings, open decisions, and next steps for a
 `superpowers:brainstorming` session that got as far as one clarifying question
 the user dismissed (deferred, not answered) — resume from there, don't
@@ -26,17 +26,16 @@ re-discover what it already documents.
 
 Things worth knowing that are easy to get wrong from file inspection alone:
 
-- **`opencode/config/` is a raw, unmodified vendor copy** of a colleague's repo
-  (`github.com/jabbas/opencode-config`, see `opencode/config/VENDORED_FROM.md`
+- **`opencode/` is the staged configuration** based on a colleague's repo
+  (`github.com/jabbas/opencode-config`, see `opencode/VENDORED_FROM.md`
   for exact commit/date). Its `AGENTS.md`, `docs/dev-guide.md`, and
   `opencode.json` describe *his* setup (Kilo-only models, git submodules for
   `superpowers/`/`anthropics-skills/`/etc., `plugins/` + `skills/` symlink
   dirs) — **none of those submodule or symlink dirs exist in this tree**
   (`.gitmodules` is present but nothing is initialized). Don't assume paths
   those docs mention actually resolve here.
-- `opencode/config/AGENTS.md` is auto-injected as a system reminder whenever
-  you read/work under `opencode/config/` — remember it's the *vendored
-  colleague's* instructions, not yet-adopted policy for this repo.
+- `opencode/AGENTS.md` is the staged global instruction set; it is not active
+  until the staged configuration is deployed.
 - The currently-live `~/.config/opencode` has only two custom global agents:
   `agents/git.md` (locked-down git-hygiene subagent, no push/rebase/force) and
   `agents/web-fast-context.md` (fast read-only web/docs-lookup subagent,

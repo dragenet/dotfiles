@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "kilo/z-ai/glm-5.1",
+  "small_model": "kilo/minimax/minimax-m3",
+  "provider": {
+    "kilo": { "options": { "headers": { "X-KiloCode-OrganizationId": "{file:secrets/kilo.org}" } } }
+  },
+  "agent": {
+    "architect":        { "model": "kilo/z-ai/glm-5.1", "variant": "high" },
+    "debugger":         { "model": "kilo/z-ai/glm-5.1", "variant": "high" },
+    "autopilot":        { "model": "kilo/z-ai/glm-5.1", "variant": "on" },
+    "general":          { "model": "kilo/z-ai/glm-5.1", "variant": "on" },
+    "devops":           { "model": "kilo/deepseek/deepseek-v4-pro", "variant": "high" },
+    "skill-smith":      { "model": "kilo/z-ai/glm-5.1", "variant": "on" },
+    "jenkins":          { "model": "kilo/z-ai/glm-5.1", "variant": "off" },
+    "webdebugger":      { "model": "kilo/z-ai/glm-5.1", "variant": "off" },
+    "coder":            { "model": "kilo/deepseek/deepseek-v4-pro", "variant": "high" },
+    "cloudflare":       { "model": "kilo/deepseek/deepseek-v4-pro", "variant": "high" },
+    "frontend":         { "model": "kilo/deepseek/deepseek-v4-pro", "variant": "high" },
+    "stitch":           { "model": "kilo/deepseek/deepseek-v4-pro", "variant": "high" },
+    "writer":           { "model": "kilo/z-ai/glm-5.1", "variant": "off" },
+    "webresearcher":    { "model": "kilo/z-ai/glm-5.1", "variant": "on" },
+    "reviewer":         { "model": "kilo/z-ai/glm-5.1", "variant": "high" },
+    "web-fast-context": { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "webscraper":       { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "webmonitor":       { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "ha":               { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "jira":             { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "stitch-mcp":       { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "graphify":         { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "graphify-extractor": { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
+    "git":              { "model": "kilo/minimax/minimax-m3", "variant": "off" }
+  }
+}
