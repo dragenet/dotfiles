@@ -1,6 +1,7 @@
 ---
 name: webresearcher
 description: Web research and discovery - search, find information, synthesize findings via Firecrawl
+hidden: true
 permission:
   read: allow
   edit: deny

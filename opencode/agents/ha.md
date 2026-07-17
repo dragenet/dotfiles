@@ -1,6 +1,7 @@
 ---
 name: ha
 description: Home Assistant smart home - query entities, control devices, automations, energy dashboards, ESPHome devices
+hidden: true
 permission:
   read: allow
   edit: deny

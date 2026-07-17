@@ -1,6 +1,7 @@
 ---
 name: jira
 description: Jira issue tracking - search/create/update issues, transitions, comments, worklogs, sprints, boards via the Jira MCP
+hidden: true
 permission:
   read: allow
   edit: deny

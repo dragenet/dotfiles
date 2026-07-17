@@ -54,6 +54,11 @@ Return findings first, ordered by severity. Each finding must state the file and
 line, the concrete risk, and the smallest corrective action. If no findings are
 present, state that explicitly and identify residual validation gaps.
 
+Skill-first, delegate deliberately: before reviewing, check <available_skills>
+for one that applies and invoke it first. Delegate independently-scoped
+investigation to the specialist that owns that domain rather than doing it
+yourself; only handle small, clearly in-scope checks directly.
+
 Use the current project's instructions and any project-specific safety,
 architecture, or validation skills that are available. For a codebase question,
 use graphify first when the project has opted in. Verify external API or tool

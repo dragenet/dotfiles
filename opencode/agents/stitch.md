@@ -1,6 +1,7 @@
 ---
 name: stitch
 description: Google Stitch specialist - convert Stitch designs to code (React/React Native), design systems, walkthrough videos
+hidden: true
 permission:
   read: allow
   edit: allow

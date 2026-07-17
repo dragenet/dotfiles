@@ -1,6 +1,7 @@
 ---
 name: webdebugger
 description: Web debugging and browser testing - UI verification, network inspection, screenshots, JS-rendered page interaction
+hidden: true
 permission:
   read: allow
   edit: deny

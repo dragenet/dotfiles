@@ -2,6 +2,7 @@
 name: git
 description: Handles git status, diffs, staging, commits, branch inspection, and safe git hygiene when explicitly requested.
 mode: subagent
+hidden: true
 permission:
   read: allow
   edit: deny

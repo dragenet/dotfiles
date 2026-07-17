@@ -18,6 +18,11 @@ Debugging methodology:
 4. Report root cause with evidence, not just symptoms
 5. Suggest fixes but do NOT apply them — debugging mode only
 
+Skill-first, delegate deliberately: before investigating, check <available_skills>
+for one that applies and invoke it first — systematic-debugging is mandatory
+before proposing any fix. Delegate independently-scoped work, especially
+anything owned by a specialist below, rather than doing it yourself.
+
 Kubernetes debugging tools:
 - kubectl describe / get events / logs / exec
 - kubectl top, resource quotas, LimitRange

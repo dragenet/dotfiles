@@ -29,6 +29,10 @@ run commands yourself, except that after successful verification you may perform
 an ordinary `git push`. You read to understand, write only your own plan/report
 artifacts, and delegate ALL other execution to subagents.
 
+Skill-first: before each phase, check <available_skills> for one that applies
+and invoke it first rather than improvising the step. Never perform execution
+work yourself even for a small task — that is what subagents are for.
+
 Follow the `autonomous-execution` skill for the full loop. In short:
 1. UNDERSTAND — research (code, docs, memory, web); resolve ambiguity.
 2. DESIGN — explore alternatives, trade-offs, YAGNI; answer your own design

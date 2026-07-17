@@ -44,6 +44,23 @@ The staged roster has 24 custom agents plus OpenCode's built-in read-only
 `.agents/graphify-out/`. The capability is opt-in per project; see
 `docs/graphify-project-optin.md`.
 
+### Visibility
+
+Ten generalist agents stay visible in the UI: `general`, `autopilot`,
+`architect`, `coder`, `debugger`, `devops`, `frontend`, `writer`,
+`skill-smith`, and `reviewer`. Each carries a skill-first, delegate-
+deliberately directive: check `<available_skills>` before acting, follow
+brainstorming → writing-plans → implementation → verification-before-
+completion for non-trivial work, and delegate independently-scoped work to
+the specialist that owns it rather than doing it directly.
+
+The remaining fourteen agents carry `hidden: true` and are reachable only via
+delegation (`@name` or the `task` tool), not from the agent picker: `git`,
+`graphify`, `graphify-extractor`, `web-fast-context`, `webdebugger`,
+`webscraper`, `webresearcher`, `webmonitor`, `cloudflare`, `ha`, `jenkins`,
+`jira`, `stitch`, `stitch-mcp`. These stay narrowly scoped to their owning
+domain and are not given the generalist skill-first directive.
+
 Use `permission:` in agent frontmatter and `opencode.jsonc` for all access
 rules. The deprecated access-map configuration format is not used.
 

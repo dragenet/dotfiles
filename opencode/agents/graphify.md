@@ -2,6 +2,7 @@
 name: graphify
 description: Builds, incrementally updates, and queries opt-in project graphify knowledge graphs without editing project source files.
 mode: subagent
+hidden: true
 permission:
   read: allow
   edit: deny

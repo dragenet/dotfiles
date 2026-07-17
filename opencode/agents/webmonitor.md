@@ -1,6 +1,7 @@
 ---
 name: webmonitor
 description: Web change tracking - set up, manage, and check monitors for page changes via Firecrawl
+hidden: true
 permission:
   read: allow
   edit: deny

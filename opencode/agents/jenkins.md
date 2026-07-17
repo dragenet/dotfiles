@@ -1,6 +1,7 @@
 ---
 name: jenkins
 description: Jenkins controller specialist - jobs, pipelines, runs, logs, config.xml, artifacts, test reports, credentials, nodes, queues, plugins via the jk CLI
+hidden: true
 permission:
   read: allow
   edit: deny

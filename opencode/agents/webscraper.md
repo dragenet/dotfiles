@@ -1,6 +1,7 @@
 ---
 name: webscraper
 description: Web content extraction - single pages, multi-page crawls, interactive JS pages via Firecrawl
+hidden: true
 permission:
   read: allow
   edit: deny
