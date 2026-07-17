@@ -12,7 +12,7 @@ permission:
     "*": ask
     "git ls-remote*": allow
     "git clone*": ask
-    "git fetch*": allow
+    "git fetch*": ask
     "git checkout*": ask
     "git status*": allow
     "git rev-parse*": allow
@@ -20,11 +20,11 @@ permission:
     "git log*": allow
     "git show*": allow
     "git for-each-ref*": allow
-    "git tag*": allow
+    "git tag*": deny
     "graphify extract*": allow
     "graphify query*": allow
     "ls *": allow
-    "find *": allow
+    "find *": ask
     "mkdir *": allow
     "test *": allow
     "pwd *": allow
@@ -78,12 +78,16 @@ You must **never**:
 ## `add` Workflow
 
 1. **Validate the URL:**
-   - Accept only valid HTTPS Git URLs without user-info: `https://host/path.git`.
-   - Accept only valid SSH Git remotes: `git@host:path` or `ssh://git@host/path`.
-   - Reject any URL containing user-info (`user@host`, `user:password@host`).
-   - Reject any URL containing credentials, tokens, or non-git SSH users
-     (e.g., `root@host`, `admin@host`).
-   - Reject URL schemes other than `https://`, `ssh://`, or `git@`.
+   - HTTPS URLs: accept only `https://host/path.git` (no user-info). Reject
+     any HTTPS URL with user-info (e.g., `https://user@host/...`,
+     `https://user:password@host/...`).
+   - SSH remotes: accept only the exact `git` user — `git@host:path`
+     (SCP-like) or `ssh://git@host/path` (SSH URL). Reject any SSH remote
+     with a username other than `git` (e.g., `root@host`, `admin@host`,
+     `myuser@host`, `ssh://user@host/path`).
+   - Reject any URL containing embedded credentials or tokens (HTTP basic
+     auth, `user:password@`, URL query parameters with secrets).
+   - Reject URL schemes other than `https://`, `ssh://`, or `git@` (SCP-like).
 
 2. **Validate the ref:**
    - Reject if `--ref` is missing, empty, abbreviated (< 40 hex chars for
