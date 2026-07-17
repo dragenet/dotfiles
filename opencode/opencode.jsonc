@@ -15,7 +15,6 @@
     "opencode-mem",
     "opencode-anthropic-oauth",
     "opencode-caffeinate",
-    "opencode-background-agents",
     "@tarquinen/opencode-dcp@latest"
   ],
   "permission": {

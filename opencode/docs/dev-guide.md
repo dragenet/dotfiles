@@ -85,12 +85,9 @@ of lookup queries.
   copy `opencode-mem.personal.example.jsonc` or `opencode-mem.work.example.jsonc`
   to `opencode-mem.jsonc` and adjust.
 - `opencode-caffeinate` keeps macOS awake while OpenCode sessions are active.
-- `opencode-background-agents` uses the strict read-only implementation:
-  background delegations cannot edit files or run bash. Reserve background
-  delegation only for genuinely long-running asynchronous jobs (e.g. slow
-  read-only research or analysis that would otherwise block the session).
-  For everything else, including any work with side effects, default to
-  standard native `task` delegation instead.
+- `opencode-background-agents` was removed (disabled per user preference).
+  All delegation uses standard native `task` delegation (the `Task` tool /
+  `@agent-name` invocation).
 - `@tarquinen/opencode-dcp@latest` supplies Dynamic Context Pruning; its
   `dcp.jsonc` settings are the primary context-management policy, with native
   compaction retained as a fallback floor.
