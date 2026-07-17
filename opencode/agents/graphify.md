@@ -14,6 +14,7 @@ permission:
   external_directory:
     "*": ask
     "~/.config/opencode/**": allow
+    "~/.agents/repositories/**": allow
   skill:
     "*": deny
     graphify: allow
@@ -29,6 +30,15 @@ directory. Build or rebuild with `graphify extract . --out .agents`; never use
 `graphify update`, which cannot choose an output directory. Query, explain, and
 traverse with `--graph .agents/graphify-out/graph.json`. Never edit project
 source files.
+
+### Managed Repository Documentation Corpus
+
+`$HOME/.agents/repositories/**` is a managed opt-in documentation corpus. When
+invoked by `@repository-docs`, treat any repository snapshot under this
+directory as an opted-in Graphify source — no per-project `AGENTS.md` directive
+is required for these snapshots. Use the snapshot's `.agents/graphify-out/`
+directory for all graph artifacts. Normal opt-in rules (project `AGENTS.md`
+directive) continue to apply to all other external repositories.
 
 Workflow:
 

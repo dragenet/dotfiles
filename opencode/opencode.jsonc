@@ -521,6 +521,50 @@
           "using-superpowers": "allow"
         }
       }
+    },
+    "repository-docs": {
+      "permission": {
+        "task": {
+          "*": "deny",
+          "graphify": "allow"
+        },
+        "bash": {
+          "*": "ask",
+          "git ls-remote*": "allow",
+          "git clone*": "allow",
+          "git fetch*": "allow",
+          "git checkout*": "allow",
+          "git status*": "allow",
+          "git rev-parse*": "allow",
+          "git fsck*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git for-each-ref*": "allow",
+          "git tag*": "allow",
+          "graphify extract*": "allow",
+          "graphify query*": "allow",
+          "ls *": "allow",
+          "find *": "allow",
+          "mkdir *": "allow",
+          "test *": "allow",
+          "pwd *": "allow",
+          "pwd": "allow",
+          "python3 -c *": "allow",
+          "jq *": "allow",
+          "rm -rf*": "deny",
+          "git push*": "deny",
+          "git clean*": "deny",
+          "git reset --hard*": "deny"
+        },
+        "external_directory": {
+          "*": "ask",
+          "~/.agents/repositories/**": "allow"
+        },
+        "skill": {
+          "*": "deny",
+          "graphify": "allow"
+        }
+      }
     }
   },
   "mcp": {
