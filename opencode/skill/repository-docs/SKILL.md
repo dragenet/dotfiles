@@ -85,19 +85,43 @@ For a non-SHA ref, resolve only an exact branch or exact tag name.
 
 ## `add` workflow
 
+### Required sanitized Git invocation environment
+
+Every Git invocation in this workflow and its test harness must run through
+this single `sanitized_git` environment wrapper; do not invoke `git` directly.
+It clears inherited repository-location and object-store variables, suppresses
+all configuration sources and injected configuration, and disables hooks:
+
+```bash
+sanitized_git() {
+  env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
+    -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+    -u GIT_CONFIG_PARAMETERS \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
+    XDG_CONFIG_HOME=<empty-config-dir> \
+    git -c core.hooksPath=/dev/null "$@"
+}
+```
+
+`<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
+non-repository directory. Run every
+`sanitized_git ls-remote` from that directory, never from the caller's current
+working directory.
+
 ### 1. Resolve an immutable commit
 
 For a branch or tag, use a no-side-effect remote listing with the validated URL
-as a single argument. Before every `git ls-remote`, create a dedicated, empty
-temporary directory for `XDG_CONFIG_HOME` and prefix the command with the full
-sanitizing environment below. This excludes system, global, and runtime-injected
-Git configuration. Request the exact branch and tag names, including the peeled
-tag result:
+as a single argument. Before every `sanitized_git ls-remote`, create the
+dedicated empty non-repository `<empty-git-cwd>` and run the command from that
+directory. This excludes system, global, runtime-injected, and inherited
+repository-location Git configuration. Request the exact branch and tag names,
+including the peeled tag result:
 
 ```text
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote --refs --tags <url> refs/tags/<ref>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote <url> refs/tags/<ref> refs/tags/<ref>^{}
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote --heads <url> refs/heads/<ref>
+cd <empty-git-cwd> && sanitized_git ls-remote --refs --tags <url> refs/tags/<ref>
+cd <empty-git-cwd> && sanitized_git ls-remote <url> refs/tags/<ref> refs/tags/<ref>^{}
+cd <empty-git-cwd> && sanitized_git ls-remote --heads <url> refs/heads/<ref>
 ```
 
 Interpret the output strictly:
@@ -133,23 +157,21 @@ not overwrite, delete, reuse, repair, inspect, or infer that it is identical.
 
 ### 3. Fetch without executing repository content
 
-Before initializing the reserved destination, create a dedicated, empty
-temporary directory for `XDG_CONFIG_HOME`. Prefix every Git command that opens
-the checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_SYSTEM=/dev/null`,
-`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_COUNT=0`, `GIT_CONFIG_PARAMETERS=`,
-and that `XDG_CONFIG_HOME`, as well as `-c core.hooksPath=/dev/null`. The
-environment prevents system/global and runtime-injected configuration (including
-filter processes and URL rewrites) from running; `core.hooksPath=/dev/null`
-separately disables hooks. Invoke the following commands as argument arrays,
-retaining the option order and using the validated URL, destination, and commit
-as literal arguments. Never add a remote or persist the raw URL in Git config:
+Before initializing the reserved destination, create the dedicated empty
+`<empty-config-dir>` and use `sanitized_git` for every Git command. The
+environment prevents system/global, runtime-injected, and inherited
+repository-location configuration (including filter processes and URL rewrites)
+from running; `core.hooksPath=/dev/null` separately disables hooks. Invoke the
+following commands as argument arrays, retaining the option order and using the
+validated URL, destination, and commit as literal arguments. Never add a remote
+or persist the raw URL in Git config:
 
 ```text
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
+sanitized_git init --no-template <destination>
+sanitized_git -C <destination> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <resolved-commit>
+sanitized_git -C <destination> checkout --detach <resolved-commit>
+sanitized_git -C <destination> status --porcelain
+sanitized_git -C <destination> fsck --no-progress
 ```
 
 The fetch is the required proof that a proposed raw SHA exists and is
@@ -272,25 +294,33 @@ smoke_root="$(mktemp -d)"
 trap 'rm -rf "$smoke_root"' EXIT
 export HOME="$smoke_root/home"
 export XDG_CONFIG_HOME="$smoke_root/empty-xdg"
-export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS=
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$smoke_root/source"
+sanitized_git() {
+  env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
+    -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+    -u GIT_CONFIG_PARAMETERS \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
+    XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
+    git -c core.hooksPath=/dev/null "$@"
+}
 
-git -c core.hooksPath=/dev/null init --no-template "$smoke_root/source"
-git -C "$smoke_root/source" config user.name fixture
-git -C "$smoke_root/source" config user.email fixture@example.invalid
+sanitized_git init --no-template "$smoke_root/source"
+sanitized_git -C "$smoke_root/source" config user.name fixture
+sanitized_git -C "$smoke_root/source" config user.email fixture@example.invalid
 printf 'first\n' > "$smoke_root/source/README.md"
-git -C "$smoke_root/source" add README.md
-git -C "$smoke_root/source" commit -m first
+sanitized_git -C "$smoke_root/source" add README.md
+sanitized_git -C "$smoke_root/source" commit -m first
 printf 'second\n' >> "$smoke_root/source/README.md"
-git -C "$smoke_root/source" commit -am second
-git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
-git init --bare --no-template "$smoke_root/fixture.git"
-git -C "$smoke_root/source" push "$smoke_root/fixture.git" HEAD:refs/heads/main --tags
+sanitized_git -C "$smoke_root/source" commit -am second
+sanitized_git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
+sanitized_git init --bare --no-template "$smoke_root/fixture.git"
+sanitized_git -C "$smoke_root/source" push "$smoke_root/fixture.git" HEAD:refs/heads/main --tags
 
 # Clear fixture assertion: exactly two commits and one annotated tag exist.
-test "$(git -C "$smoke_root/source" rev-list --count HEAD)" = 2
-test "$(git -C "$smoke_root/source" cat-file -t fixture-v1)" = tag
-test "$(git -C "$smoke_root/source" tag --list | wc -l | tr -d ' ')" = 1
+test "$(sanitized_git -C "$smoke_root/source" rev-list --count HEAD)" = 2
+test "$(sanitized_git -C "$smoke_root/source" cat-file -t fixture-v1)" = tag
+test "$(sanitized_git -C "$smoke_root/source" tag --list | wc -l | tr -d ' ')" = 1
 ```
 
 Production remote-validation assertions are separate from this fixture: assert
@@ -308,9 +338,9 @@ specialist to run setup actions it is denied. Its test-only destination is below
 After the harness completes its lower-level sanitized Git sequence, assert:
 
 ```bash
-test "$(git -C "$snapshot" rev-parse --verify HEAD)" = "$resolved_commit"
-test "$(git -C "$snapshot" symbolic-ref -q HEAD || true)" = ""
-test -z "$(git -C "$snapshot" status --porcelain)"
+test "$(sanitized_git -C "$snapshot" rev-parse --verify HEAD)" = "$resolved_commit"
+test "$(sanitized_git -C "$snapshot" symbolic-ref -q HEAD || true)" = ""
+test -z "$(sanitized_git -C "$snapshot" status --porcelain)"
 test "${#resolved_commit}" = 40
 python3 -m json.tool "$snapshot/.agents/repository-docs-manifest.json" >/dev/null
 ! grep -Eq 'password|https?://|fixture@example\.invalid' "$snapshot/.agents/repository-docs-manifest.json"

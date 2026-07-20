@@ -530,7 +530,6 @@
         },
         "bash": {
           "*": "ask",
-          "git ls-remote*": "allow",
           "git init*": "ask",
           "git fetch*": "ask",
           "git checkout*": "ask",

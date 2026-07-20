@@ -10,7 +10,6 @@ permission:
   grep: allow
   bash:
     "*": ask
-    "git ls-remote*": allow
     "git init*": ask
     "git fetch*": ask
     "git checkout*": ask
@@ -81,6 +80,30 @@ You must **never**:
 
 ## `add` Workflow
 
+### Required sanitized Git invocation environment
+
+Every Git invocation in this workflow must run through this single
+`sanitized_git` environment wrapper; do not invoke `git` directly. It clears
+inherited repository-location and object-store variables, suppresses all
+configuration sources and injected configuration, and disables hooks:
+
+```bash
+sanitized_git() {
+  env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
+    -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+    -u GIT_CONFIG_PARAMETERS \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
+    XDG_CONFIG_HOME=<empty-config-dir> \
+    git -c core.hooksPath=/dev/null "$@"
+}
+```
+
+`<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
+non-repository directory. Run every
+`sanitized_git ls-remote` from that directory, never from the caller's current
+working directory.
+
 1. **Validate the URL:**
    - HTTPS URLs: accept only `https://host/path.git` (no user-info). Reject
      any HTTPS URL with user-info (e.g., `https://user@host/...`,
@@ -100,12 +123,10 @@ You must **never**:
    - Accept a full 40-hex commit SHA, a branch name, or a tag name.
 
 3. **Resolve the ref to a full 40-hex commit:**
-    - For a branch or tag, create an empty `XDG_CONFIG_HOME` and run every
-      `git ls-remote` with `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null
-      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS=`
-      plus `-c core.hooksPath=/dev/null`. Use the validated URL directly and
-      request only exact branch/tag refs; for tags, include peeled references
-      (`refs/tags/<name>^{}`) to obtain the underlying commit SHA.
+     - For a branch or tag, run every `sanitized_git ls-remote` from
+       `<empty-git-cwd>` using the validated URL directly, and request only
+       exact branch/tag refs. For tags, include peeled references
+       (`refs/tags/<name>^{}`) to obtain the underlying commit SHA.
    - For a full 40-hex commit, treat it as the proposed resolved commit; do
      not pass it to `git ls-remote`. Verify it by the constrained fetch in
      the next step.
@@ -122,17 +143,15 @@ You must **never**:
        inspect, reuse, repair, or overwrite it.
 
 5. **Initialize, fetch, and checkout without repository-side configuration:**
-    - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
-      Prefix every Git command that opens the checkout with
-        `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir>`
-       and `-c core.hooksPath=/dev/null`; this prevents system/global and
-       injected environment configuration from restoring filter processes,
-       URL rewrites, or hooks.
-      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
-      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <40-hex-commit>`; never add a remote.
-      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
-      - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
-      - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
+     - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
+       Use `sanitized_git` for every Git command; this prevents system/global
+       and injected environment configuration from restoring filter processes,
+       URL rewrites, hooks, or inherited repository locations.
+       - `sanitized_git init --no-template <target-path>`
+       - `sanitized_git -C <target-path> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <40-hex-commit>`; never add a remote.
+       - `sanitized_git -C <target-path> checkout --detach <40-hex-commit>`
+       - Verify clean status: `sanitized_git -C <target-path> status --porcelain` must be empty.
+       - Run `sanitized_git -C <target-path> fsck --no-progress` and reject if errors are found.
     - If any command fails, preserve the resulting destination as an
       incomplete conflict; do not clean it up or retry in place.
 
