@@ -21,6 +21,8 @@ managed snapshot was changed.
 - `python3 -c "import json; json.load(open('opencode/opencode.jsonc')); print('valid')"` — passed.
 - An inline documentation-contract assertion verified the required Git
   resolution/fetch, manifest, Graphify, and graph-only query clauses.
+- A focused red-green assertion caught and corrected the required peeled-tag
+  `git ls-remote` request for annotated tags.
 - `bash opencode/scripts/check-skill-whitelists.sh` — pre-existing failure in
   the isolated checkout: 115 configured skills are absent from its uninitialized
   discovery paths. It is unrelated to this two-file Task 2 change and was not

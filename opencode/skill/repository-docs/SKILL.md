@@ -93,6 +93,7 @@ peeled tag result:
 
 ```text
 git ls-remote --refs --tags <url> refs/tags/<ref>
+git ls-remote <url> refs/tags/<ref> refs/tags/<ref>^{}
 git ls-remote --heads <url> refs/heads/<ref>
 ```
 
