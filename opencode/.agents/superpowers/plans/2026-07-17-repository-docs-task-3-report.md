@@ -140,3 +140,35 @@ frontmatter header.
 | `bash scripts/check-skill-whitelists.sh` | PASS: 122 entries, 5 informational orphans (exit 0) |
 | `bash scripts/test-repository-docs.sh` | PASS: 36/36 (exit 0) |
 | `git diff --check` | PASS (exit 0) |
+
+---
+
+## Final Review Remediation (2026-07-20)
+
+**Scope:** Removed the staged/live `python3 -m json.tool *` auto-allows; the
+inherited `"*": "ask"` rule now gates JSON validation. Added checker coverage
+that rejects every `allow` pattern containing `json.tool` in staged/live
+repository-docs JSONC and frontmatter.
+
+**Graphify ordering:** The staged skill and staged/live agent now require the
+complete no-install Graphify availability/usability preflight before atomic
+final destination reservation. The disposable harness verifies the documented
+ordering and proves that a failed no-Graphify preflight does not reserve a final
+destination.
+
+**Authentication policy:** Global Git configuration remains disabled with
+`GIT_CONFIG_GLOBAL=/dev/null`. Public HTTPS and SSH-agent authentication are
+supported; private HTTPS requiring a credential helper fails closed and must use
+an accepted SSH remote or a future explicitly reviewed helper integration. No
+credential is stored, displayed, or terminal-prompted.
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `bash -n scripts/check-skill-whitelists.sh && bash -n scripts/test-repository-docs.sh` | PASS (exit 0) |
+| `python3 -c "import json; ..."` for staged/live JSONC | PASS: `staged/live JSON valid` (exit 0) |
+| `diff -q agents/repository-docs.md ~/.config/opencode/agents/repository-docs.md` | PASS: identical (exit 0) |
+| `bash scripts/check-skill-whitelists.sh` | PASS: 122 entries, 5 informational orphans (exit 0) |
+| `bash scripts/test-repository-docs.sh` | PASS: 39/39 (exit 0) |
+| `git diff --check` | PASS (exit 0) |

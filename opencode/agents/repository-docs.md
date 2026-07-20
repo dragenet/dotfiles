@@ -22,7 +22,6 @@ permission:
     "pwd *": allow
     "pwd": allow
     "python3 -c *": deny
-    "python3 -m json.tool *": allow
     "jq *": allow
     "rm -rf*": deny
     "git push*": deny
@@ -56,7 +55,12 @@ from the resulting graph index.
 
 You must **never**:
 
-- Pass or store credentials. For HTTPS remotes, reject URL user-info
+- Pass or store credentials. Public HTTPS and SSH-agent authentication are
+  supported. Private HTTPS that requires a credential helper fails closed; use
+  an accepted SSH remote or wait for a future explicitly reviewed helper
+  integration. Never re-enable global Git configuration, invoke a credential
+  helper, store/display credentials, or prompt in the terminal.
+- For HTTPS remotes, reject URL user-info
   (`https://user@host/...`, `https://user:password@host/...`). For SSH
   remotes, allow only the `git` username and reject any other username.
 - Accept abbreviated SHAs, object expressions (`ref^{}`, `ref~N`), or
@@ -79,8 +83,8 @@ Every Git invocation in this workflow must run through this single
 `sanitized_git` environment wrapper; do not invoke `git` directly. It clears
 inherited repository-location, object-store, SSH-command, askpass, and
 Git-executable-path variables, suppresses all configuration sources and
-injected configuration, and disables hooks. It does not suppress normal Git
-credential handling or write credentials:
+injected configuration, and disables hooks. It intentionally disables global
+credential helpers and does not write credentials:
 
 ```bash
 sanitized_git() {
@@ -99,7 +103,8 @@ sanitized_git() {
 For accepted SSH remotes, the fixed trusted absolute `/usr/bin/ssh -F none`
 command replaces every inherited SSH override and ignores user and system SSH
 configuration. This prevents `ProxyCommand` and `Match exec` configuration
-from executing programs. It does not suppress normal Git credential handling.
+from executing programs. SSH-agent authentication remains supported; private
+HTTPS requiring a credential helper fails closed.
 
 `<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
 non-repository directory. Run every
@@ -135,7 +140,21 @@ working directory.
    - Reject a branch or tag if `git ls-remote` cannot resolve it to exactly
      one 40-hex commit.
 
-4. **Determine the snapshot path:**
+4. **Preflight Graphify before reservation:**
+    - Before creating any final snapshot directory, require the complete
+      Graphify `--preinstalled` availability/usability preflight from the
+      Graphify skill. Run it from a dedicated empty
+      `<graphify-preflight-root>` outside the managed corpus and future
+      destination. It must resolve an absolute CLI and interpreter, prove both
+      are outside the future snapshot, run isolated `import graphify`, and run
+      `graphify --help` from a safe working directory.
+    - If Graphify is unavailable, unusable, or resolves inside the future
+      snapshot, fail closed before `mkdir <target-path>`. Leave no final
+      destination path. Repeat the canonical `--preinstalled` preflight during
+      extraction as defense in depth; never install Graphify, delegate
+      installation, or create a substitute graph.
+
+5. **Determine the snapshot path:**
    - Derive identity from the sanitized host, owner, and repository name
      (e.g., `github.com_owner_repo`).
    - Target path: `$HOME/.agents/repositories/<identity>/<40-hex-commit>`.
@@ -144,7 +163,7 @@ working directory.
        initialization. `EEXIST` is a conflict: refuse and report it; never
        inspect, reuse, repair, or overwrite it.
 
-5. **Initialize, fetch, and checkout without repository-side configuration:**
+6. **Initialize, fetch, and checkout without repository-side configuration:**
      - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
        Use `sanitized_git` for every Git command; this prevents system/global
        and injected environment configuration from restoring filter processes,
@@ -157,7 +176,7 @@ working directory.
     - If any command fails, preserve the resulting destination as an
       incomplete conflict; do not clean it up or retry in place.
 
-6. **Write the manifest:**
+7. **Write the manifest:**
    - Create `$HOME/.agents/repositories/<identity>/<40-hex-commit>/.agents/repository-docs-manifest.json`
      with:
      ```json
@@ -171,10 +190,10 @@ working directory.
      ```
    - Never include credentials, tokens, or raw remote URLs in the manifest.
 
-7. **Delegate to Graphify:**
-    - Require the Graphify CLI to be already installed and available; otherwise
-      fail closed without installing it or delegating installation. Invoke
-      `@graphify` only to extract the snapshot: `graphify extract . --out .agents --preinstalled`
+8. **Delegate to Graphify:**
+     - The required preflight already established that Graphify is available.
+       Invoke `@graphify` only to extract the snapshot:
+       `graphify extract . --out .agents --preinstalled`
      from within the snapshot directory.
     - Validate the output: `python3 -I -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.

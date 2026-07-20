@@ -586,7 +586,6 @@
           "pwd *": "allow",
           "pwd": "allow",
           "python3 -c *": "deny",
-          "python3 -m json.tool *": "allow",
           "jq *": "allow",
           "rm -rf*": "deny",
           "git push*": "deny",

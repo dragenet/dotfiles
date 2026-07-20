@@ -307,6 +307,71 @@ repository_docs_has_no_direct_git_allows() {
   done
 }
 
+# JSON parsing needs no auto-allow: its inherited wildcard ask rule is
+# sufficient, and an allow pattern permits writable redirections as well.
+repository_docs_has_no_json_tool_autoallows() {
+  local config contract
+  local configs=("$CONFIG" "$LIVE_CONFIG")
+  local contracts=("$REPOSITORY_DOCS_AGENT_CONTRACT" "$LIVE_AGENTS/repository-docs.md")
+
+  for config in "${configs[@]}"; do
+    if ! jq -e '
+      [.agent["repository-docs"].permission.bash | to_entries[]
+       | select(.key | test("json[.]tool"))
+       | select(.value == "allow")]
+      | length == 0
+    ' "$config" >/dev/null; then
+      echo "[FAIL] repository-docs configuration $config must not auto-allow writable JSON-tool commands"
+      return 1
+    fi
+  done
+
+  for contract in "${contracts[@]}"; do
+    if grep -Eq '^[[:space:]]*"[^"[:space:]]*python[^"[:space:]]*.*json\.tool[^"[:space:]]*"[[:space:]]*:[[:space:]]*allow([[:space:]]|$)' "$contract"; then
+      echo "[FAIL] repository-docs agent frontmatter $contract must not auto-allow writable JSON-tool commands"
+      return 1
+    fi
+  done
+}
+
+# Sanitized Git must keep global configuration and credential helpers disabled.
+# The public-HTTPS/SSH-agent policy makes the deliberate private-HTTPS failure
+# mode independently auditable in all user-facing contracts.
+repository_docs_credential_policy_is_explicit() {
+  local contract required normalized_contract
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT" "$LIVE_AGENTS/repository-docs.md")
+  local required_literals=(
+    'GIT_CONFIG_GLOBAL=/dev/null'
+    'Public HTTPS and SSH-agent authentication are supported.'
+    'Private HTTPS that requires a credential helper fails closed'
+  )
+
+  for contract in "${contracts[@]}"; do
+    normalized_contract="$(tr '\n' ' ' < "$contract" | tr -s ' ')"
+    for required in "${required_literals[@]}"; do
+      if ! grep -Fq -- "$required" <<<"$normalized_contract"; then
+        echo "[FAIL] repository-docs contract $contract must state and enforce $required"
+        return 1
+      fi
+    done
+  done
+}
+
+# The no-install Graphify preflight must occur before the immutable final mkdir.
+repository_docs_graphify_preflight_precedes_reservation() {
+  local contract preflight_line reservation_line
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT" "$LIVE_AGENTS/repository-docs.md")
+
+  for contract in "${contracts[@]}"; do
+    preflight_line="$(grep -n 'Preflight Graphify before reservation' "$contract" | cut -d: -f1 || true)"
+    reservation_line="$(grep -nE 'Reserve the immutable destination|Determine the snapshot path' "$contract" | cut -d: -f1 || true)"
+    if [[ -z "$preflight_line" || -z "$reservation_line" || "$preflight_line" -ge "$reservation_line" ]]; then
+      echo "[FAIL] repository-docs contract $contract must preflight Graphify before final reservation"
+      return 1
+    fi
+  done
+}
+
 # --- Staged ↔ live config drift assertions ---
 
 stage_live_agent_frontmatter_identical() {
@@ -505,6 +570,18 @@ if ! repository_docs_graphify_validation_is_isolated; then
 fi
 
 if ! repository_docs_has_no_direct_git_allows; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_has_no_json_tool_autoallows; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_credential_policy_is_explicit; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_preflight_precedes_reservation; then
   fail_count=$((fail_count + 1))
 fi
 

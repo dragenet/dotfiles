@@ -13,7 +13,11 @@ checkout, source browsing, or repository maintenance workflow.
 
 - Require exactly one explicit `--ref <branch|tag|40-hex-commit>` for `add`.
 - Never display, log, store, or place credentials in a command or manifest.
-  Let normal Git credential handling obtain any required credential.
+  Public HTTPS and SSH-agent authentication are supported. Private HTTPS that
+  requires a credential helper fails closed; use an accepted SSH remote or wait
+  for a future explicitly reviewed helper integration. Never re-enable global Git
+  configuration, invoke a credential helper, store/display credentials, or prompt
+  in the terminal.
 - Never run fetched repository code, hooks, package managers, install scripts,
   build scripts, watches, or submodule commands. Do not initialize, fetch, or
   recurse into submodules.
@@ -91,8 +95,8 @@ Every Git invocation in this workflow and its test harness must run through
 this single `sanitized_git` environment wrapper; do not invoke `git` directly.
 It clears inherited repository-location, object-store, SSH-command, askpass,
 and Git-executable-path variables, suppresses all configuration sources and
-injected configuration, and disables hooks. It does not suppress normal Git
-credential handling or write credentials:
+injected configuration, and disables hooks. It intentionally disables global
+credential helpers and does not write credentials:
 
 ```bash
 sanitized_git() {
@@ -111,7 +115,8 @@ sanitized_git() {
 For accepted SSH remotes, the fixed trusted absolute `/usr/bin/ssh -F none`
 command replaces every inherited SSH override and ignores user and system SSH
 configuration. This prevents `ProxyCommand` and `Match exec` configuration
-from executing programs. It does not suppress normal Git credential handling.
+from executing programs. SSH-agent authentication remains supported; private
+HTTPS requiring a credential helper fails closed.
 
 `<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
 non-repository directory. Run every
@@ -149,7 +154,24 @@ only through the constrained fetch below.
 
 The resolved commit is always lowercase 40-hex and is the sole checkout target.
 
-### 2. Reserve the immutable destination
+### 2. Preflight Graphify before reservation
+
+Before creating any final snapshot directory, require the complete Graphify
+`--preinstalled` availability/usability preflight from the Graphify skill. Run
+it from a dedicated empty `<graphify-preflight-root>` outside the managed corpus
+and the future destination. It must resolve an absolute Graphify CLI and its
+absolute interpreter, prove both realpaths are outside the future snapshot,
+create a safe working directory outside the snapshot, run isolated
+`import graphify`, and run `graphify --help`. Do not install Graphify or create
+a substitute graph.
+
+If that preflight fails because Graphify is unavailable, unusable, or resolves
+inside the future snapshot, fail closed before calling `mkdir <destination>`.
+The operation must leave no final destination path. Repeat the canonical
+`--preinstalled` preflight during extraction after checkout; it is a defense in
+depth check, not permission to reserve a destination early.
+
+### 3. Reserve the immutable destination
 
 Construct only this destination:
 
@@ -164,7 +186,7 @@ the final destination exists for any reason (empty, partial, populated, or with
 `.git`), stop and report it. Reserve the destination before initialization; do
 not overwrite, delete, reuse, repair, inspect, or infer that it is identical.
 
-### 3. Fetch without executing repository content
+### 4. Fetch without executing repository content
 
 Before initializing the reserved destination, create the dedicated empty
 `<empty-config-dir>` and use `sanitized_git` for every Git command. The
@@ -190,7 +212,7 @@ detached at exactly `resolved-commit`, `status --porcelain` is empty, and
 attempting cleanup or deletion; preserve the resulting directory as an
 incomplete conflict. Do not retry in place.
 
-### 4. Write a safe manifest
+### 5. Write a safe manifest
 
 After Git verification succeeds, create only:
 
@@ -220,13 +242,12 @@ credential material. Validate the manifest with:
 python3 -m json.tool .agents/repository-docs-manifest.json
 ```
 
-### 5. Build and validate the graph
+### 6. Build and validate the graph
 
-Require that the Graphify CLI is already installed and available before starting
-the operation. If it is unavailable, fail closed; do not install Graphify,
-delegate installation, or create a substitute graph. Delegate only indexing to
-`@graphify`. From the snapshot directory, perform exactly the canonical
-extraction:
+The required preflight has already established that Graphify is installed and
+usable before reservation. Delegate only indexing to `@graphify`. From the
+snapshot directory, perform exactly the canonical extraction, whose
+`--preinstalled` mode repeats the isolated availability/usability preflight:
 
 ```text
 graphify extract . --out .agents --preinstalled

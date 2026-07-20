@@ -312,6 +312,38 @@ echo ""
 
 echo "== Graphify preinstalled mode =="
 
+# Production must complete Graphify's no-install availability/usability preflight
+# before reserving the final immutable destination. These contract assertions
+# prevent an unavailable CLI from leaving a final corpus path behind.
+repository_docs_skill="$REPO_ROOT/skill/repository-docs/SKILL.md"
+repository_docs_agent="$REPO_ROOT/agents/repository-docs.md"
+
+for contract in "$repository_docs_skill" "$repository_docs_agent"; do
+  preflight_line="$(grep -n 'Preflight Graphify before reservation' "$contract" | cut -d: -f1 || true)"
+  reserve_line="$(grep -nE 'Reserve the immutable destination|Determine the snapshot path' "$contract" | cut -d: -f1 || true)"
+  if [ -n "$preflight_line" ] && [ -n "$reserve_line" ] && [ "$preflight_line" -lt "$reserve_line" ]; then
+    _pass "Graphify preflight precedes final reservation in $(basename "$contract")"
+  else
+    _fail "Graphify preflight must precede final reservation in $(basename "$contract")"
+  fi
+done
+
+unavailable_destination="$HOME/.agents/repositories/fixture.invalid_owner_repository/unavailable-graphify"
+preflight_without_graphify() {
+  PATH="/usr/bin:/bin" command -v graphify >/dev/null 2>&1
+}
+
+reserve_after_preflight() {
+  preflight_without_graphify || return 1
+  mkdir "$unavailable_destination"
+}
+
+if ! reserve_after_preflight && [ ! -e "$unavailable_destination" ]; then
+  _pass "unavailable Graphify leaves no final destination"
+else
+  _fail "unavailable Graphify must fail before final destination reservation"
+fi
+
 if command -v graphify >/dev/null 2>&1; then
   _pass "graphify CLI found"
 
