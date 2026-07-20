@@ -1,47 +1,47 @@
 return {
-	--   "numToStr/Comment.nvim",
-	--   event = { "BufReadPre", "BufNewFile" },
-	--   dependencies = {
-	--     -- Provides JSX/TSX-aware comment detection via treesitter
-	--     -- Without this, commenting in .tsx files uses // instead of {/* */}
-	--     "JoosepAlviste/nvim-ts-context-commentstring",
-	--   },
-	--   config = function()
-	--     -- ts_context_commentstring must be set up first, with autocmd disabled
-	--     -- (Comment.nvim drives it manually via pre_hook instead)
-	--     require("ts_context_commentstring").setup({ enable_autocmd = false })
-	--
-	--     require("Comment").setup({
-	--       -- Default keymaps (worth knowing):
-	--       --   gcc        → toggle current line comment
-	--       --   gc{motion} → comment region (e.g. gc3j = comment 3 lines down, gcip = comment paragraph)
-	--       --   gco / gcO  → insert comment line below / above, enter insert mode
-	--       --   gcA        → append comment at end of line
-	--       --   gc (Visual) → toggle selected lines
-	--
-	--       pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
-	--       -- pre_hook is called before each comment operation
-	--       -- here it asks ts_context_commentstring what comment style is correct
-	--       -- for the treesitter node under the cursor (handles JSX/TSX correctly)
-	--     })
-	--
-	--     local api = require("Comment.api")
-	--
-	--     -- <C-/>  works in Ghostty and kitty-protocol terminals (Neovim 0.10+)
-	--     -- <C-_>  is what most other terminals send for Ctrl+/ (ASCII control code)
-	--     -- Mapping both means it works everywhere
-	--     vim.keymap.set("n", "<C-/>", api.toggle.linewise.current, { desc = "Toggle comment" })
-	--     vim.keymap.set("n", "<C-_>", api.toggle.linewise.current, { desc = "Toggle comment" })
-	--
-	--     -- Visual mode: wrap the call to pass the visual selection mode (linewise vs blockwise)
-	--     local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
-	--     vim.keymap.set("v", "<C-/>", function()
-	--       vim.api.nvim_feedkeys(esc, "nx", false)
-	--       api.toggle.linewise(vim.fn.visualmode())
-	--     end, { desc = "Toggle comment" })
-	--     vim.keymap.set("v", "<C-_>", function()
-	--       vim.api.nvim_feedkeys(esc, "nx", false)
-	--       api.toggle.linewise(vim.fn.visualmode())
-	--     end, { desc = "Toggle comment" })
-	--   end,
+  "numToStr/Comment.nvim",
+  event = { "BufReadPre", "BufNewFile" },
+  dependencies = {
+    -- Provides JSX/TSX-aware comment detection via treesitter
+    -- Without this, commenting in .tsx files uses // instead of {/* */}
+    "JoosepAlviste/nvim-ts-context-commentstring",
+  },
+  config = function()
+    -- ts_context_commentstring must be set up first, with autocmd disabled
+    -- (Comment.nvim drives it manually via pre_hook instead)
+    require("ts_context_commentstring").setup({ enable_autocmd = false })
+
+    require("Comment").setup({
+      -- Default keymaps (worth knowing):
+      --   gcc        → toggle current line comment
+      --   gc{motion} → comment region (e.g. gc3j = comment 3 lines down, gcip = comment paragraph)
+      --   gco / gcO  → insert comment line below / above, enter insert mode
+      --   gcA        → append comment at end of line
+      --   gc (Visual) → toggle selected lines
+
+      pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+      -- pre_hook is called before each comment operation
+      -- here it asks ts_context_commentstring what comment style is correct
+      -- for the treesitter node under the cursor (handles JSX/TSX correctly)
+    })
+
+    local api = require("Comment.api")
+
+    -- <C-/>  works in Ghostty and kitty-protocol terminals (Neovim 0.10+)
+    -- <C-_>  is what most other terminals send for Ctrl+/ (ASCII control code)
+    -- Mapping both means it works everywhere
+    vim.keymap.set("n", "<C-/>", api.toggle.linewise.current, { desc = "Toggle comment" })
+    vim.keymap.set("n", "<C-_>", api.toggle.linewise.current, { desc = "Toggle comment" })
+
+    -- Visual mode: wrap the call to pass the visual selection mode (linewise vs blockwise)
+    local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
+    vim.keymap.set("v", "<C-/>", function()
+      vim.api.nvim_feedkeys(esc, "nx", false)
+      api.toggle.linewise(vim.fn.visualmode())
+    end, { desc = "Toggle comment" })
+    vim.keymap.set("v", "<C-_>", function()
+      vim.api.nvim_feedkeys(esc, "nx", false)
+      api.toggle.linewise(vim.fn.visualmode())
+    end, { desc = "Toggle comment" })
+  end,
 }
