@@ -98,14 +98,20 @@ credential handling or write credentials:
 sanitized_git() {
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
     -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
-    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH \
+    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH -u GIT_SSH_VARIANT \
     -u GIT_ASKPASS -u SSH_ASKPASS -u GIT_EXEC_PATH \
+    GIT_SSH_COMMAND="/usr/bin/ssh -F none" \
     GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
     XDG_CONFIG_HOME=<empty-config-dir> \
     git -c core.hooksPath=/dev/null "$@"
 }
 ```
+
+For accepted SSH remotes, the fixed trusted absolute `/usr/bin/ssh -F none`
+command replaces every inherited SSH override and ignores user and system SSH
+configuration. This prevents `ProxyCommand` and `Match exec` configuration
+from executing programs. It does not suppress normal Git credential handling.
 
 `<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
 non-repository directory. Run every
@@ -301,8 +307,9 @@ mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$smoke_root/source"
 sanitized_git() {
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
     -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
-    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH \
+    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH -u GIT_SSH_VARIANT \
     -u GIT_ASKPASS -u SSH_ASKPASS -u GIT_EXEC_PATH \
+    GIT_SSH_COMMAND="/usr/bin/ssh -F none" \
     GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
     XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \

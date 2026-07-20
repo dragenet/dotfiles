@@ -34,10 +34,12 @@ GRAPHIFY_SKILL_CONTRACT="$REPO_ROOT/skill/graphify/SKILL.md"
 REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS=(
   "GIT_SSH_COMMAND"
   "GIT_SSH"
+  "GIT_SSH_VARIANT"
   "GIT_ASKPASS"
   "SSH_ASKPASS"
   "GIT_EXEC_PATH"
 )
+REPOSITORY_DOCS_TRUSTED_SSH_COMMAND='GIT_SSH_COMMAND="/usr/bin/ssh -F none"'
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "[FAIL] jq is required but not found" >&2
@@ -110,6 +112,19 @@ repository_docs_sanitized_git_environment_is_complete() {
         return 1
       fi
     done
+    if ! awk -v required="$REPOSITORY_DOCS_TRUSTED_SSH_COMMAND" '
+      /^sanitized_git\(\) \{/ { in_wrapper = 1; found = 0; wrappers++; next }
+      in_wrapper && /^}/ {
+        if (!found) missing = 1
+        in_wrapper = 0
+        next
+      }
+      in_wrapper && index($0, required) { found = 1 }
+      END { exit !(wrappers > 0 && !missing) }
+    ' "$contract"; then
+      echo "[FAIL] every repository-docs sanitized_git wrapper in $contract must pin GIT_SSH_COMMAND to /usr/bin/ssh -F none"
+      return 1
+    fi
   done
 }
 
@@ -161,9 +176,9 @@ graphify_preinstalled_mode_is_isolated_from_snapshot() {
   ' "$GRAPHIFY_SKILL_CONTRACT")"
 
   for required in \
-    'GRAPHIFY_BIN="$(cd -P' \
+    'GRAPHIFY_BIN="$(realpath "$GRAPHIFY_BIN")"' \
     'SNAPSHOT_ROOT="$(pwd -P)"' \
-    'GRAPHIFY_PYTHON="$(cd -P' \
+    'GRAPHIFY_PYTHON="$(realpath "$GRAPHIFY_PYTHON")"' \
     'SAFE_CWD="$(mktemp -d' \
     '"$GRAPHIFY_PYTHON" -I -c' \
     '"$GRAPHIFY_BIN" --help'; do
@@ -175,6 +190,25 @@ graphify_preinstalled_mode_is_isolated_from_snapshot() {
 
   if ! grep -Fq -- 'append `-I` to every such Python invocation' "$GRAPHIFY_SKILL_CONTRACT"; then
     echo "[FAIL] Graphify --preinstalled mode must require isolated execution for every later Python invocation"
+    return 1
+  fi
+
+  # A hostile ssh_config must not influence the fixed transport: -F none
+  # excludes both user and system configuration before any ProxyCommand or
+  # Match exec directive can be evaluated.
+  if ! (
+    set -e
+    local fixture_root ssh_config
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/repository-docs-ssh-fixture.XXXXXX")"
+    trap 'rm -rf "$fixture_root"' EXIT
+    ssh_config="$fixture_root/config"
+    printf 'Host *\n    ProxyCommand /bin/false\n    Match exec "/bin/false"\n' > "$ssh_config"
+    test -f /usr/bin/ssh
+    grep -Fx '    ProxyCommand /bin/false' "$ssh_config" >/dev/null
+    grep -Fx '    Match exec "/bin/false"' "$ssh_config" >/dev/null
+    ! /usr/bin/ssh -F none -G hostile.invalid 2>/dev/null | grep -F '/bin/false' >/dev/null
+  ); then
+    echo "[FAIL] repository-docs trusted SSH transport permits hostile ssh_config directives"
     return 1
   fi
 
@@ -199,6 +233,33 @@ assert spec is None or not os.path.abspath(spec.origin or "").startswith(os.path
     )
   ); then
     echo "[FAIL] Graphify --preinstalled isolation permits a snapshot-local graphify package"
+    return 1
+  fi
+
+  # A CLI or interpreter may be linked through an external path into the
+  # snapshot. Final-target realpaths must still fail the containment check.
+  if ! (
+    set -e
+    local fixture_root snapshot_root external_root cli_target python_target cli_link python_link
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-symlink-fixture.XXXXXX")"
+    trap 'rm -rf "$fixture_root"' EXIT
+    snapshot_root="$fixture_root/snapshot"
+    external_root="$fixture_root/external"
+    mkdir -p "$snapshot_root/bin" "$external_root"
+    snapshot_root="$(realpath "$snapshot_root")"
+    cli_target="$snapshot_root/bin/graphify"
+    python_target="$snapshot_root/bin/python"
+    : > "$cli_target"
+    : > "$python_target"
+    cli_link="$external_root/graphify"
+    python_link="$external_root/python"
+    ln -s "$cli_target" "$cli_link"
+    ln -s "$python_target" "$python_link"
+    for target in "$(realpath "$cli_link")" "$(realpath "$python_link")"; do
+      case "$target" in "$snapshot_root"|"$snapshot_root"/*) ;; *) exit 1 ;; esac
+    done
+  ); then
+    echo "[FAIL] Graphify --preinstalled containment check permits a symlink target inside the snapshot"
     return 1
   fi
 }

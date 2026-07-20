@@ -93,7 +93,7 @@ case "$GRAPHIFY_BIN" in
         exit 1
         ;;
 esac
-GRAPHIFY_BIN="$(cd -P "$(dirname "$GRAPHIFY_BIN")" && pwd -P)/$(basename "$GRAPHIFY_BIN")"
+GRAPHIFY_BIN="$(realpath "$GRAPHIFY_BIN")"
 SNAPSHOT_ROOT="$(pwd -P)"
 case "$GRAPHIFY_BIN" in
     "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
@@ -115,7 +115,7 @@ case "$GRAPHIFY_PYTHON" in
         exit 1
         ;;
 esac
-GRAPHIFY_PYTHON="$(cd -P "$(dirname "$GRAPHIFY_PYTHON")" && pwd -P)/$(basename "$GRAPHIFY_PYTHON")"
+GRAPHIFY_PYTHON="$(realpath "$GRAPHIFY_PYTHON")"
 case "$GRAPHIFY_PYTHON" in
     "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
         echo 'ERROR: --preinstalled must use a Graphify interpreter outside the snapshot; installation is disabled.' >&2
