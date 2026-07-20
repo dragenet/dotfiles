@@ -63,8 +63,9 @@ from the resulting graph index.
 
 You must **never**:
 
-- Pass or store credentials — reject any remote URL containing user-info
-  (`user@host`, `user:password@host`).
+- Pass or store credentials. For HTTPS remotes, reject URL user-info
+  (`https://user@host/...`, `https://user:password@host/...`). For SSH
+  remotes, allow only the `git` username and reject any other username.
 - Accept abbreviated SHAs, object expressions (`ref^{}`, `ref~N`), or
   leading-dash refs (`--ref=-branch`).
 - Clone submodules, run repository hooks, execute any code from the fetched
@@ -95,10 +96,14 @@ You must **never**:
    - Accept a full 40-hex commit SHA, a branch name, or a tag name.
 
 3. **Resolve the ref to a full 40-hex commit:**
-   - Run `git ls-remote <url> <ref>` and parse the output.
-   - For tags, include peeled references (`refs/tags/<name>^{}`) to obtain
-     the underlying commit SHA.
-   - Reject if the ref cannot be resolved to exactly one 40-hex commit.
+   - For a branch or tag, run `git ls-remote <url> <ref>` and parse the
+     output. For tags, include peeled references (`refs/tags/<name>^{}`) to
+     obtain the underlying commit SHA.
+   - For a full 40-hex commit, treat it as the proposed resolved commit; do
+     not pass it to `git ls-remote`. Verify it by the constrained fetch in
+     the next step.
+   - Reject a branch or tag if `git ls-remote` cannot resolve it to exactly
+     one 40-hex commit.
 
 4. **Determine the snapshot path:**
    - Derive identity from the sanitized host, owner, and repository name
@@ -109,7 +114,7 @@ You must **never**:
 
 5. **Clone and checkout:**
    - `git -c core.hooksPath=/dev/null clone --no-checkout --no-recurse-submodules <url> <target-path>`
-   - `git -c core.hooksPath=/dev/null -C <target-path> fetch origin <40-hex-commit>`
+   - `git -c core.hooksPath=/dev/null -C <target-path> fetch --no-recurse-submodules origin <40-hex-commit>`
    - `git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
    - Verify clean status: `git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be
      empty.
