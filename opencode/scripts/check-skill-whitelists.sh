@@ -73,6 +73,10 @@ repository_docs_command_routes_to_agent() {
     '.command["repository-docs"].agent == $agent' "$CONFIG" >/dev/null
 }
 
+repository_docs_command_keeps_subtask_enabled() {
+  jq -e '.command["repository-docs"] | if has("subtask") then .subtask == true else true end' "$CONFIG" >/dev/null
+}
+
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
 is_builtin() {
@@ -120,6 +124,11 @@ fi
 
 if ! repository_docs_command_routes_to_agent; then
   echo "[FAIL] /repository-docs command must be bound to repository-docs"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_command_keeps_subtask_enabled; then
+  echo "[FAIL] /repository-docs command must keep subtask enabled (true or omitted)"
   fail_count=$((fail_count + 1))
 fi
 

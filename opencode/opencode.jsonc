@@ -532,7 +532,6 @@
           "*": "ask",
           "git ls-remote*": "allow",
           "git init*": "ask",
-          "git remote add*": "ask",
           "git fetch*": "ask",
           "git checkout*": "ask",
           "git status*": "allow",

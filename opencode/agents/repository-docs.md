@@ -12,7 +12,6 @@ permission:
     "*": ask
     "git ls-remote*": allow
     "git init*": ask
-    "git remote add*": ask
     "git fetch*": ask
     "git checkout*": ask
     "git status*": allow
@@ -75,6 +74,8 @@ You must **never**:
 - Mutate, overwrite, or repoint an existing snapshot directory. Reject every
   pre-existing final destination path, including an empty, partial, or
   populated directory, and report the conflict.
+- Persist a raw remote URL in Git configuration, install Graphify, delegate
+  Graphify installation, or create a substitute graph when Graphify is absent.
 - Delete any snapshot or manifest entry.
 - Push to any remote, clean, or force-reset.
 
@@ -99,9 +100,12 @@ You must **never**:
    - Accept a full 40-hex commit SHA, a branch name, or a tag name.
 
 3. **Resolve the ref to a full 40-hex commit:**
-   - For a branch or tag, run `git ls-remote <url> <ref>` and parse the
-     output. For tags, include peeled references (`refs/tags/<name>^{}`) to
-     obtain the underlying commit SHA.
+    - For a branch or tag, create an empty `XDG_CONFIG_HOME` and run every
+      `git ls-remote` with `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null
+      GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS=`
+      plus `-c core.hooksPath=/dev/null`. Use the validated URL directly and
+      request only exact branch/tag refs; for tags, include peeled references
+      (`refs/tags/<name>^{}`) to obtain the underlying commit SHA.
    - For a full 40-hex commit, treat it as the proposed resolved commit; do
      not pass it to `git ls-remote`. Verify it by the constrained fetch in
      the next step.
@@ -112,22 +116,23 @@ You must **never**:
    - Derive identity from the sanitized host, owner, and repository name
      (e.g., `github.com_owner_repo`).
    - Target path: `$HOME/.agents/repositories/<identity>/<40-hex-commit>`.
-    - If the final target path already exists for any reason, refuse and
-      report the conflict; never inspect, reuse, repair, or overwrite it.
+     - Construct missing parent directories, then atomically reserve the final
+       target with `mkdir <target-path>` (never `mkdir -p <target-path>`) before
+       initialization. `EEXIST` is a conflict: refuse and report it; never
+       inspect, reuse, repair, or overwrite it.
 
 5. **Initialize, fetch, and checkout without repository-side configuration:**
     - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
       Prefix every Git command that opens the checkout with
-       `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir>`
+        `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir>`
        and `-c core.hooksPath=/dev/null`; this prevents system/global and
        injected environment configuration from restoring filter processes,
        URL rewrites, or hooks.
-     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
-     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> remote add origin -- <url>`
-     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules origin <40-hex-commit>`
-     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
-     - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
-     - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
+      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
+      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <40-hex-commit>`; never add a remote.
+      - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
+      - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
+      - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
     - If any command fails, preserve the resulting destination as an
       incomplete conflict; do not clean it up or retry in place.
 
@@ -146,7 +151,9 @@ You must **never**:
    - Never include credentials, tokens, or raw remote URLs in the manifest.
 
 7. **Delegate to Graphify:**
-   - Invoke `@graphify` to extract the snapshot: `graphify extract . --out .agents`
+    - Require the Graphify CLI to be already installed and available; otherwise
+      fail closed without installing it or delegating installation. Invoke
+      `@graphify` only to extract the snapshot: `graphify extract . --out .agents`
      from within the snapshot directory.
    - Validate the output: `python3 -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.
@@ -173,8 +180,8 @@ You must **never**:
 
 - If ref resolution fails: report the exact `git ls-remote` output and the
   ref that could not be resolved.
-- If a snapshot already exists: report the path and suggest using the existing
-  snapshot or a different ref.
+- If a snapshot already exists: report the path as a conflict; do not suggest
+  using, inspecting, repairing, or reusing it.
 - If Graphify fails: report the error, do not attempt to broad-read the
   repository as a substitute.
 - If the manifest is missing: report the snapshot path and the fact that the

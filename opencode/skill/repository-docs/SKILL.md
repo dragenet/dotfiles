@@ -88,13 +88,16 @@ For a non-SHA ref, resolve only an exact branch or exact tag name.
 ### 1. Resolve an immutable commit
 
 For a branch or tag, use a no-side-effect remote listing with the validated URL
-as a single argument. Request the exact branch and tag names, including the
-peeled tag result:
+as a single argument. Before every `git ls-remote`, create a dedicated, empty
+temporary directory for `XDG_CONFIG_HOME` and prefix the command with the full
+sanitizing environment below. This excludes system, global, and runtime-injected
+Git configuration. Request the exact branch and tag names, including the peeled
+tag result:
 
 ```text
-git ls-remote --refs --tags <url> refs/tags/<ref>
-git ls-remote <url> refs/tags/<ref> refs/tags/<ref>^{}
-git ls-remote --heads <url> refs/heads/<ref>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote --refs --tags <url> refs/tags/<ref>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote <url> refs/tags/<ref> refs/tags/<ref>^{}
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null ls-remote --heads <url> refs/heads/<ref>
 ```
 
 Interpret the output strictly:
@@ -121,31 +124,32 @@ Construct only this destination:
 $HOME/.agents/repositories/<host>_<owner>_<repository>/<resolved-commit>
 ```
 
-Create missing parent directories without traversing or inspecting repository
-content. Every pre-existing final destination is a conflict: if it exists for
-any reason (empty, partial, populated, or with `.git`), stop and report it. Do
+Construct missing parent directories without traversing or inspecting repository
+content, then atomically reserve the final destination with `mkdir <destination>`
+(never `mkdir -p <destination>`). `mkdir` returning `EEXIST` is a conflict: if
+the final destination exists for any reason (empty, partial, populated, or with
+`.git`), stop and report it. Reserve the destination before initialization; do
 not overwrite, delete, reuse, repair, inspect, or infer that it is identical.
 
 ### 3. Fetch without executing repository content
 
-Before initializing the destination, create a dedicated, empty temporary
-directory for `XDG_CONFIG_HOME`. Prefix every Git command that opens the
-checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`,
-`GIT_CONFIG_COUNT=0`, `GIT_CONFIG_PARAMETERS=`, and that `XDG_CONFIG_HOME`,
-as well as `-c core.hooksPath=/dev/null`. The environment prevents
-system/global configuration and injected environment configuration (including
+Before initializing the reserved destination, create a dedicated, empty
+temporary directory for `XDG_CONFIG_HOME`. Prefix every Git command that opens
+the checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_SYSTEM=/dev/null`,
+`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_COUNT=0`, `GIT_CONFIG_PARAMETERS=`,
+and that `XDG_CONFIG_HOME`, as well as `-c core.hooksPath=/dev/null`. The
+environment prevents system/global and runtime-injected configuration (including
 filter processes and URL rewrites) from running; `core.hooksPath=/dev/null`
 separately disables hooks. Invoke the following commands as argument arrays,
-retaining the option order and using the validated URL, destination, and
-commit as literal arguments:
+retaining the option order and using the validated URL, destination, and commit
+as literal arguments. Never add a remote or persist the raw URL in Git config:
 
 ```text
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> remote add origin -- <url>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules origin <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
 ```
 
 The fetch is the required proof that a proposed raw SHA exists and is
@@ -187,8 +191,11 @@ python3 -m json.tool .agents/repository-docs-manifest.json
 
 ### 5. Build and validate the graph
 
-Delegate indexing to `@graphify`. From the snapshot directory, perform exactly
-the canonical extraction:
+Require that the Graphify CLI is already installed and available before starting
+the operation. If it is unavailable, fail closed; do not install Graphify,
+delegate installation, or create a substitute graph. Delegate only indexing to
+`@graphify`. From the snapshot directory, perform exactly the canonical
+extraction:
 
 ```text
 graphify extract . --out .agents
@@ -278,8 +285,7 @@ printf 'second\n' >> "$smoke_root/source/README.md"
 git -C "$smoke_root/source" commit -am second
 git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
 git init --bare --no-template "$smoke_root/fixture.git"
-git -C "$smoke_root/source" remote add origin "$smoke_root/fixture.git"
-git -C "$smoke_root/source" push origin HEAD:refs/heads/main --tags
+git -C "$smoke_root/source" push "$smoke_root/fixture.git" HEAD:refs/heads/main --tags
 
 # Clear fixture assertion: exactly two commits and one annotated tag exist.
 test "$(git -C "$smoke_root/source" rev-list --count HEAD)" = 2
@@ -310,11 +316,10 @@ python3 -m json.tool "$snapshot/.agents/repository-docs-manifest.json" >/dev/nul
 ! grep -Eq 'password|https?://|fixture@example\.invalid' "$snapshot/.agents/repository-docs-manifest.json"
 ```
 
-For an installed Graphify binary, run `graphify extract . --out .agents` from
-`$snapshot`, then require
+Require an already-installed Graphify binary. Run `graphify extract . --out
+.agents` from `$snapshot`, then require
 `python3 -m json.tool "$snapshot/.agents/graphify-out/graph.json" >/dev/null`.
-When Graphify is intentionally unavailable, a smoke harness may instead create
-only the fixture graph stub `{"fixture":true}` at that graph path and run the
-same JSON assertion; this validates the graph-output assertion plumbing, not
-Graphify extraction. The smoke flow must never write to the real
-`$HOME/.agents/repositories` corpus because `HOME` is redirected above.
+If Graphify is unavailable, the harness must fail closed; it must not install,
+delegate installation, or create a graph stub. The smoke flow must never write
+to the real `$HOME/.agents/repositories` corpus because `HOME` is redirected
+above.
