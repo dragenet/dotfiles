@@ -11,7 +11,8 @@ permission:
   bash:
     "*": ask
     "git ls-remote*": allow
-    "git clone*": ask
+    "git init*": ask
+    "git remote add*": ask
     "git fetch*": ask
     "git checkout*": ask
     "git status*": allow
@@ -45,6 +46,7 @@ permission:
   skill:
     "*": deny
     graphify: allow
+    repository-docs: allow
 steps: 60
 ---
 
@@ -70,9 +72,9 @@ You must **never**:
   leading-dash refs (`--ref=-branch`).
 - Clone submodules, run repository hooks, execute any code from the fetched
   repository, install dependencies, or run build scripts.
-- Mutate, overwrite, or repoint an existing snapshot directory. If the
-  destination path already exists and contains a populated checkout, refuse
-  the operation and report the conflict.
+- Mutate, overwrite, or repoint an existing snapshot directory. Reject every
+  pre-existing final destination path, including an empty, partial, or
+  populated directory, and report the conflict.
 - Delete any snapshot or manifest entry.
 - Push to any remote, clean, or force-reset.
 
@@ -109,17 +111,23 @@ You must **never**:
    - Derive identity from the sanitized host, owner, and repository name
      (e.g., `github.com_owner_repo`).
    - Target path: `$HOME/.agents/repositories/<identity>/<40-hex-commit>`.
-   - If the target path already exists and contains a non-empty `.git`
-     directory, refuse and report the conflict.
+    - If the final target path already exists for any reason, refuse and
+      report the conflict; never inspect, reuse, repair, or overwrite it.
 
-5. **Clone and checkout:**
-   - `git -c core.hooksPath=/dev/null clone --no-checkout --no-recurse-submodules <url> <target-path>`
-   - `git -c core.hooksPath=/dev/null -C <target-path> fetch --no-recurse-submodules origin <40-hex-commit>`
-   - `git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
-   - Verify clean status: `git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be
-     empty.
-   - Run `git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors
-     are found.
+5. **Initialize, fetch, and checkout without repository-side configuration:**
+    - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
+      Prefix every Git command that opens the checkout with
+      `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir>`
+      and `-c core.hooksPath=/dev/null`; this prevents system/global filter
+      processes and hooks from running.
+    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
+    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> remote add origin -- <url>`
+    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules origin <40-hex-commit>`
+    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
+    - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
+    - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
+    - If any command fails, preserve the resulting destination as an
+      incomplete conflict; do not clean it up or retry in place.
 
 6. **Write the manifest:**
    - Create `$HOME/.agents/repositories/<identity>/<40-hex-commit>/.agents/repository-docs-manifest.json`

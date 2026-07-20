@@ -122,22 +122,28 @@ $HOME/.agents/repositories/<host>_<owner>_<repository>/<resolved-commit>
 ```
 
 Create missing parent directories without traversing or inspecting repository
-content. If the final destination already exists for any reason (empty,
-partial, populated, or with `.git`), stop and report a snapshot conflict. Do
-not overwrite, delete, reuse, or infer that it is identical.
+content. Every pre-existing final destination is a conflict: if it exists for
+any reason (empty, partial, populated, or with `.git`), stop and report it. Do
+not overwrite, delete, reuse, repair, inspect, or infer that it is identical.
 
 ### 3. Fetch without executing repository content
 
-Use `core.hooksPath=/dev/null` on every Git command that opens the checkout.
-Invoke the following commands as argument arrays, retaining the option order
-and using the validated URL, destination, and commit as literal arguments:
+Before initializing the destination, create a dedicated, empty temporary
+directory for `XDG_CONFIG_HOME`. Prefix every Git command that opens the
+checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`, and
+that `XDG_CONFIG_HOME`, as well as `-c core.hooksPath=/dev/null`. The
+environment prevents system/global configuration (including filter processes)
+from running; `core.hooksPath=/dev/null` separately disables hooks. Invoke the
+following commands as argument arrays, retaining the option order and using
+the validated URL, destination, and commit as literal arguments:
 
 ```text
-git -c core.hooksPath=/dev/null clone --no-checkout --no-recurse-submodules -- <url> <destination>
-git -c core.hooksPath=/dev/null -C <destination> fetch --no-recurse-submodules origin <resolved-commit>
-git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
-git -c core.hooksPath=/dev/null -C <destination> status --porcelain
-git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> remote add origin -- <url>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules origin <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
 ```
 
 The fetch is the required proof that a proposed raw SHA exists and is
@@ -145,7 +151,7 @@ retrievable. For every ref type, reject the operation unless checkout is
 detached at exactly `resolved-commit`, `status --porcelain` is empty, and
 `fsck` reports no errors. If any command fails, report the failure without
 attempting cleanup or deletion; preserve the resulting directory as an
-incomplete conflict.
+incomplete conflict. Do not retry in place.
 
 ### 4. Write a safe manifest
 
@@ -243,12 +249,59 @@ with credentials), and condition: invalid remote/ref, unresolved or ambiguous
 ref, existing destination, fetch/checkout/clean/fsck failure, invalid manifest,
 or missing/invalid Graphify output.
 
-For a public, disposable smoke flow, use a temporary directory containing a
-local bare fixture with two commits and an annotated tag. Keep every fixture
-and test output beneath that temporary directory, verify rejection of missing
-ref, abbreviated SHA, leading-dash ref, ref expression, and user-info URL
-before cloning, then verify that the annotated tag resolves to a 40-hex commit,
-the checkout is detached and clean, manifests contain no credential material,
-and `graph.json` parses after extraction. The smoke flow must never write to
-the real `$HOME/.agents/repositories` corpus unless an operator explicitly
-requests that target.
+Run this disposable local-fixture smoke flow only when an operator requests
+verification. It creates neither a real corpus entry nor a network connection:
+
+```bash
+set -euo pipefail
+smoke_root="$(mktemp -d)"
+trap 'rm -rf "$smoke_root"' EXIT
+export HOME="$smoke_root/home"
+export XDG_CONFIG_HOME="$smoke_root/empty-xdg"
+export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$smoke_root/source"
+
+git -c core.hooksPath=/dev/null init --no-template "$smoke_root/source"
+git -C "$smoke_root/source" config user.name fixture
+git -C "$smoke_root/source" config user.email fixture@example.invalid
+printf 'first\n' > "$smoke_root/source/README.md"
+git -C "$smoke_root/source" add README.md
+git -C "$smoke_root/source" commit -m first
+printf 'second\n' >> "$smoke_root/source/README.md"
+git -C "$smoke_root/source" commit -am second
+git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
+git init --bare --no-template "$smoke_root/fixture.git"
+git -C "$smoke_root/source" remote add origin "$smoke_root/fixture.git"
+git -C "$smoke_root/source" push origin HEAD:refs/heads/main --tags
+
+# Clear fixture assertion: exactly two commits and one annotated tag exist.
+test "$(git -C "$smoke_root/source" rev-list --count HEAD)" = 2
+test "$(git -C "$smoke_root/source" cat-file -t fixture-v1)" = tag
+test "$(git -C "$smoke_root/source" tag --list | wc -l | tr -d ' ')" = 1
+```
+
+Before making a directory or invoking Git for an `add`, assert that the input
+validator rejects: a missing ref, abbreviated SHA, `--ref=-main`, `main^{}`, and
+`https://user:password@example.invalid/owner/repository.git`. Then use the
+fixture through the documented workflow, with
+`<url>="$smoke_root/fixture.git"`, `<ref>=fixture-v1`, and a destination below
+`$HOME/.agents/repositories/fixture.invalid_owner_repository/<resolved-commit>`.
+Assert all of the following after the documented commands complete:
+
+```bash
+test "$(git -C "$snapshot" rev-parse --verify HEAD)" = "$resolved_commit"
+test "$(git -C "$snapshot" symbolic-ref -q HEAD || true)" = ""
+test -z "$(git -C "$snapshot" status --porcelain)"
+test "${#resolved_commit}" = 40
+python3 -m json.tool "$snapshot/.agents/repository-docs-manifest.json" >/dev/null
+! grep -Eq 'password|https?://|fixture@example\.invalid' "$snapshot/.agents/repository-docs-manifest.json"
+```
+
+For an installed Graphify binary, run `graphify extract . --out .agents` from
+`$snapshot`, then require
+`python3 -m json.tool "$snapshot/.agents/graphify-out/graph.json" >/dev/null`.
+When Graphify is intentionally unavailable, a smoke harness may instead create
+only the fixture graph stub `{"fixture":true}` at that graph path and run the
+same JSON assertion; this validates the graph-output assertion plumbing, not
+Graphify extraction. The smoke flow must never write to the real
+`$HOME/.agents/repositories` corpus because `HOME` is redirected above.

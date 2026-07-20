@@ -21,11 +21,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG="$REPO_ROOT/opencode.jsonc"
+CONFIG="${OPENCODE_CONFIG_PATH:-$REPO_ROOT/opencode.jsonc}"
 
 # Built-in skills registered in OpenCode source (NOT SKILL.md files on disk).
 # See skill/index.ts (CUSTOMIZE_OPENCODE_SKILL_NAME).
 KNOWN_BUILTINS=("customize-opencode")
+REPOSITORY_DOCS_AGENT="repository-docs"
+REPOSITORY_DOCS_SKILL="repository-docs"
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "[FAIL] jq is required but not found" >&2
@@ -53,6 +55,18 @@ WHITELIST="$(
     | "\($a)\t\(.key)"
   ' "$CONFIG"
 )"
+
+# This skill can create immutable external snapshots, so only its dedicated
+# specialist may whitelist it. Generic whitelist resolution alone is not enough.
+repository_docs_route_is_exclusive() {
+  local routes
+  routes="$(jq -r --arg skill "$REPOSITORY_DOCS_SKILL" '
+    .agent | to_entries[]
+    | select((.value.permission.skill // {})[$skill] == "allow")
+    | .key
+  ' "$CONFIG")"
+  [[ "$routes" == "$REPOSITORY_DOCS_AGENT" ]]
+}
 
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
@@ -93,6 +107,11 @@ while IFS=$'\t' read -r agent skill; do
     fi
   fi
 done <<<"$WHITELIST"
+
+if ! repository_docs_route_is_exclusive; then
+  echo "[FAIL] repository-docs skill route must be allowed only by repository-docs"
+  fail_count=$((fail_count + 1))
+fi
 
 # --- Orphans: on-disk skills no agent allows (literal or via wildcard) — INFO ---
 orphan_count=0
