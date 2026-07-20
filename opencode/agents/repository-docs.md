@@ -10,8 +10,7 @@ permission:
   grep: allow
   bash:
     "*": ask
-    "git ls-remote*": allow
-    "git clone*": ask
+    "git init*": ask
     "git fetch*": ask
     "git checkout*": ask
     "git status*": allow
@@ -21,7 +20,6 @@ permission:
     "git show*": allow
     "git for-each-ref*": allow
     "git tag*": deny
-    "graphify extract*": allow
     "graphify query*": allow
     "ls *": allow
     "find *": ask
@@ -45,6 +43,7 @@ permission:
   skill:
     "*": deny
     graphify: allow
+    repository-docs: allow
 steps: 60
 ---
 
@@ -70,13 +69,48 @@ You must **never**:
   leading-dash refs (`--ref=-branch`).
 - Clone submodules, run repository hooks, execute any code from the fetched
   repository, install dependencies, or run build scripts.
-- Mutate, overwrite, or repoint an existing snapshot directory. If the
-  destination path already exists and contains a populated checkout, refuse
-  the operation and report the conflict.
+- Mutate, overwrite, or repoint an existing snapshot directory. Reject every
+  pre-existing final destination path, including an empty, partial, or
+  populated directory, and report the conflict.
+- Persist a raw remote URL in Git configuration, install Graphify, delegate
+  Graphify installation, or create a substitute graph when Graphify is absent.
 - Delete any snapshot or manifest entry.
 - Push to any remote, clean, or force-reset.
 
 ## `add` Workflow
+
+### Required sanitized Git invocation environment
+
+Every Git invocation in this workflow must run through this single
+`sanitized_git` environment wrapper; do not invoke `git` directly. It clears
+inherited repository-location, object-store, SSH-command, askpass, and
+Git-executable-path variables, suppresses all configuration sources and
+injected configuration, and disables hooks. It does not suppress normal Git
+credential handling or write credentials:
+
+```bash
+sanitized_git() {
+  env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
+    -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH -u GIT_SSH_VARIANT \
+    -u GIT_ASKPASS -u SSH_ASKPASS -u GIT_EXEC_PATH \
+    GIT_SSH_COMMAND="/usr/bin/ssh -F none" \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
+    XDG_CONFIG_HOME=<empty-config-dir> \
+    git -c core.hooksPath=/dev/null "$@"
+}
+```
+
+For accepted SSH remotes, the fixed trusted absolute `/usr/bin/ssh -F none`
+command replaces every inherited SSH override and ignores user and system SSH
+configuration. This prevents `ProxyCommand` and `Match exec` configuration
+from executing programs. It does not suppress normal Git credential handling.
+
+`<empty-config-dir>` and `<empty-git-cwd>` are each a dedicated empty
+non-repository directory. Run every
+`sanitized_git ls-remote` from that directory, never from the caller's current
+working directory.
 
 1. **Validate the URL:**
    - HTTPS URLs: accept only `https://host/path.git` (no user-info). Reject
@@ -92,13 +126,15 @@ You must **never**:
 
 2. **Validate the ref:**
    - Reject if `--ref` is missing, empty, abbreviated (< 40 hex chars for
-     commit SHAs), contains `^`, `~`, `{`, `}`, or starts with `-`.
+     commit SHAs), contains `^`, `~`, `{`, `}`, `*`, `?`, or `[`, or starts
+     with `-`.
    - Accept a full 40-hex commit SHA, a branch name, or a tag name.
 
 3. **Resolve the ref to a full 40-hex commit:**
-   - For a branch or tag, run `git ls-remote <url> <ref>` and parse the
-     output. For tags, include peeled references (`refs/tags/<name>^{}`) to
-     obtain the underlying commit SHA.
+     - For a branch or tag, run every `sanitized_git ls-remote` from
+       `<empty-git-cwd>` using the validated URL directly, and request only
+       exact branch/tag refs. For tags, include peeled references
+       (`refs/tags/<name>^{}`) to obtain the underlying commit SHA.
    - For a full 40-hex commit, treat it as the proposed resolved commit; do
      not pass it to `git ls-remote`. Verify it by the constrained fetch in
      the next step.
@@ -109,17 +145,23 @@ You must **never**:
    - Derive identity from the sanitized host, owner, and repository name
      (e.g., `github.com_owner_repo`).
    - Target path: `$HOME/.agents/repositories/<identity>/<40-hex-commit>`.
-   - If the target path already exists and contains a non-empty `.git`
-     directory, refuse and report the conflict.
+     - Construct missing parent directories, then atomically reserve the final
+       target with `mkdir <target-path>` (never `mkdir -p <target-path>`) before
+       initialization. `EEXIST` is a conflict: refuse and report it; never
+       inspect, reuse, repair, or overwrite it.
 
-5. **Clone and checkout:**
-   - `git -c core.hooksPath=/dev/null clone --no-checkout --no-recurse-submodules <url> <target-path>`
-   - `git -c core.hooksPath=/dev/null -C <target-path> fetch --no-recurse-submodules origin <40-hex-commit>`
-   - `git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
-   - Verify clean status: `git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be
-     empty.
-   - Run `git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors
-     are found.
+5. **Initialize, fetch, and checkout without repository-side configuration:**
+     - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
+       Use `sanitized_git` for every Git command; this prevents system/global
+       and injected environment configuration from restoring filter processes,
+       URL rewrites, hooks, or inherited repository locations.
+       - `sanitized_git init --no-template <target-path>`
+       - `sanitized_git -C <target-path> fetch --no-tags --no-recurse-submodules --no-write-fetch-head <url> <40-hex-commit>`; never add a remote.
+       - `sanitized_git -C <target-path> checkout --detach <40-hex-commit>`
+       - Verify clean status: `sanitized_git -C <target-path> status --porcelain` must be empty.
+       - Run `sanitized_git -C <target-path> fsck --no-progress` and reject if errors are found.
+    - If any command fails, preserve the resulting destination as an
+      incomplete conflict; do not clean it up or retry in place.
 
 6. **Write the manifest:**
    - Create `$HOME/.agents/repositories/<identity>/<40-hex-commit>/.agents/repository-docs-manifest.json`
@@ -136,9 +178,11 @@ You must **never**:
    - Never include credentials, tokens, or raw remote URLs in the manifest.
 
 7. **Delegate to Graphify:**
-   - Invoke `@graphify` to extract the snapshot: `graphify extract . --out .agents`
+    - Require the Graphify CLI to be already installed and available; otherwise
+      fail closed without installing it or delegating installation. Invoke
+      `@graphify` only to extract the snapshot: `graphify extract . --out .agents --preinstalled`
      from within the snapshot directory.
-   - Validate the output: `python3 -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
+    - Validate the output: `python3 -I -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.
 
 ## `query` Workflow
@@ -163,8 +207,8 @@ You must **never**:
 
 - If ref resolution fails: report the exact `git ls-remote` output and the
   ref that could not be resolved.
-- If a snapshot already exists: report the path and suggest using the existing
-  snapshot or a different ref.
+- If a snapshot already exists: report the path as a conflict; do not suggest
+  using, inspecting, repairing, or reusing it.
 - If Graphify fails: report the error, do not attempt to broad-read the
   repository as a substitute.
 - If the manifest is missing: report the snapshot path and the fact that the

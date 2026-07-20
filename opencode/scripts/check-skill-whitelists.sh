@@ -21,11 +21,25 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG="$REPO_ROOT/opencode.jsonc"
+CONFIG="${OPENCODE_CONFIG_PATH:-$REPO_ROOT/opencode.jsonc}"
 
 # Built-in skills registered in OpenCode source (NOT SKILL.md files on disk).
 # See skill/index.ts (CUSTOMIZE_OPENCODE_SKILL_NAME).
 KNOWN_BUILTINS=("customize-opencode")
+REPOSITORY_DOCS_AGENT="repository-docs"
+REPOSITORY_DOCS_SKILL="repository-docs"
+REPOSITORY_DOCS_SKILL_CONTRACT="$REPO_ROOT/skill/repository-docs/SKILL.md"
+REPOSITORY_DOCS_AGENT_CONTRACT="$REPO_ROOT/agents/repository-docs.md"
+GRAPHIFY_SKILL_CONTRACT="$REPO_ROOT/skill/graphify/SKILL.md"
+REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS=(
+  "GIT_SSH_COMMAND"
+  "GIT_SSH"
+  "GIT_SSH_VARIANT"
+  "GIT_ASKPASS"
+  "SSH_ASKPASS"
+  "GIT_EXEC_PATH"
+)
+REPOSITORY_DOCS_TRUSTED_SSH_COMMAND='GIT_SSH_COMMAND="/usr/bin/ssh -F none"'
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "[FAIL] jq is required but not found" >&2
@@ -53,6 +67,214 @@ WHITELIST="$(
     | "\($a)\t\(.key)"
   ' "$CONFIG"
 )"
+
+# This skill can create immutable external snapshots, so only its dedicated
+# specialist may whitelist it. Generic whitelist resolution alone is not enough.
+repository_docs_route_is_exclusive() {
+  local routes
+  routes="$(jq -r --arg skill "$REPOSITORY_DOCS_SKILL" '
+    .agent | to_entries[]
+    | select((.value.permission.skill // {})[$skill] == "allow")
+    | .key
+  ' "$CONFIG")"
+  [[ "$routes" == "$REPOSITORY_DOCS_AGENT" ]]
+}
+
+repository_docs_command_routes_to_agent() {
+  jq -e --arg agent "$REPOSITORY_DOCS_AGENT" \
+    '.command["repository-docs"].agent == $agent' "$CONFIG" >/dev/null
+}
+
+repository_docs_command_keeps_subtask_enabled() {
+  jq -e '.command["repository-docs"] | if has("subtask") then .subtask == true else true end' "$CONFIG" >/dev/null
+}
+
+# Every documented sanitized_git wrapper must clear command-execution overrides.
+# Check wrapper blocks individually so a token in the fixture cannot mask an
+# omission from the production contract (or vice versa).
+repository_docs_sanitized_git_environment_is_complete() {
+  local contract required
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    for required in "${REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS[@]}"; do
+      if ! awk -v required="$required" '
+        /^sanitized_git\(\) \{/ { in_wrapper = 1; found = 0; wrappers++; next }
+        in_wrapper && /^}/ {
+          if (!found) missing = 1
+          in_wrapper = 0
+          next
+        }
+        in_wrapper && $0 ~ ("-u[[:space:]]+" required "([[:space:]]|$)") { found = 1 }
+        END { exit !(wrappers > 0 && !missing) }
+      ' "$contract"; then
+        echo "[FAIL] every repository-docs sanitized_git wrapper in $contract must clear $required"
+        return 1
+      fi
+    done
+    if ! awk -v required="$REPOSITORY_DOCS_TRUSTED_SSH_COMMAND" '
+      /^sanitized_git\(\) \{/ { in_wrapper = 1; found = 0; wrappers++; next }
+      in_wrapper && /^}/ {
+        if (!found) missing = 1
+        in_wrapper = 0
+        next
+      }
+      in_wrapper && index($0, required) { found = 1 }
+      END { exit !(wrappers > 0 && !missing) }
+    ' "$contract"; then
+      echo "[FAIL] every repository-docs sanitized_git wrapper in $contract must pin GIT_SSH_COMMAND to /usr/bin/ssh -F none"
+      return 1
+    fi
+  done
+}
+
+# Repository snapshots may only delegate Graphify through its documented
+# no-install mode. Inspect that mode's code block separately so normal Graphify
+# installation instructions remain available to ordinary Graphify invocations.
+repository_docs_graphify_route_uses_preinstalled_mode() {
+  local contract
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    if ! grep -Fq -- "graphify extract . --out .agents --preinstalled" "$contract"; then
+      echo "[FAIL] repository-docs Graphify extraction in $contract must use --preinstalled"
+      return 1
+    fi
+  done
+}
+
+graphify_preinstalled_mode_has_no_install_path() {
+  if ! awk '
+    /^### `--preinstalled` mode:/ { in_mode = 1; next }
+    in_mode && /^### / { exit }
+    in_mode && /^```bash$/ { in_code = !in_code; saw_code = 1; next }
+    in_mode && in_code && /(^|[^[:alnum:]_-])(uv|pip|installer|install)([^[:alnum:]_-]|$)/ { forbidden = 1 }
+    END { exit !(in_mode && saw_code && !forbidden) }
+  ' "$GRAPHIFY_SKILL_CONTRACT"; then
+    echo "[FAIL] Graphify --preinstalled mode must contain a detection-only code path with no installer command"
+    return 1
+  fi
+}
+
+repository_docs_graphify_extract_keeps_default_ask() {
+  if grep -Fq -- '"graphify extract*": allow' "$REPOSITORY_DOCS_AGENT_CONTRACT"; then
+    echo "[FAIL] repository-docs agent frontmatter must not auto-allow graphify extract"
+    return 1
+  fi
+  if ! jq -e '.agent["repository-docs"].permission.bash | has("graphify extract*") | not' "$CONFIG" >/dev/null; then
+    echo "[FAIL] repository-docs staged configuration must not auto-allow graphify extract"
+    return 1
+  fi
+}
+
+graphify_preinstalled_mode_is_isolated_from_snapshot() {
+  local mode
+  mode="$(awk '
+    /^### `--preinstalled` mode:/ { in_mode = 1 }
+    in_mode { print }
+    in_mode && /^### Step 1 / { exit }
+  ' "$GRAPHIFY_SKILL_CONTRACT")"
+
+  for required in \
+    'GRAPHIFY_BIN="$(realpath "$GRAPHIFY_BIN")"' \
+    'SNAPSHOT_ROOT="$(pwd -P)"' \
+    'GRAPHIFY_PYTHON="$(realpath "$GRAPHIFY_PYTHON")"' \
+    'SAFE_CWD="$(mktemp -d' \
+    '"$GRAPHIFY_PYTHON" -I -c' \
+    '"$GRAPHIFY_BIN" --help'; do
+    if ! grep -Fq -- "$required" <<<"$mode"; then
+      echo "[FAIL] Graphify --preinstalled mode must require $required"
+      return 1
+    fi
+  done
+
+  if ! grep -Fq -- 'append `-I` to every such Python invocation' "$GRAPHIFY_SKILL_CONTRACT"; then
+    echo "[FAIL] Graphify --preinstalled mode must require isolated execution for every later Python invocation"
+    return 1
+  fi
+
+  # A hostile ssh_config must not influence the fixed transport: -F none
+  # excludes both user and system configuration before any ProxyCommand or
+  # Match exec directive can be evaluated.
+  if ! (
+    set -e
+    local fixture_root ssh_config
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/repository-docs-ssh-fixture.XXXXXX")"
+    trap 'rm -rf "$fixture_root"' EXIT
+    ssh_config="$fixture_root/config"
+    printf 'Host *\n    ProxyCommand /bin/false\n    Match exec "/bin/false"\n' > "$ssh_config"
+    test -f /usr/bin/ssh
+    grep -Fx '    ProxyCommand /bin/false' "$ssh_config" >/dev/null
+    grep -Fx '    Match exec "/bin/false"' "$ssh_config" >/dev/null
+    ! /usr/bin/ssh -F none -G hostile.invalid 2>/dev/null | grep -F '/bin/false' >/dev/null
+  ); then
+    echo "[FAIL] repository-docs trusted SSH transport permits hostile ssh_config directives"
+    return 1
+  fi
+
+  # A snapshot-local graphify package must not be importable by the documented
+  # isolated preflight, even when an inherited PYTHONPATH points at it.
+  if ! (
+    set -e
+    local fixture_root safe_cwd
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-fixture.XXXXXX")"
+    safe_cwd="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-safe.XXXXXX")"
+    trap 'rm -rf "$fixture_root" "$safe_cwd"' EXIT
+    mkdir -p "$fixture_root/graphify"
+    printf 'raise RuntimeError("snapshot-local graphify was imported")\n' > "$fixture_root/graphify/__init__.py"
+    (
+      cd "$safe_cwd"
+      FIXTURE_ROOT="$fixture_root" PYTHONPATH="$fixture_root" python3 -I -c '
+import importlib.util
+import os
+spec = importlib.util.find_spec("graphify")
+assert spec is None or not os.path.abspath(spec.origin or "").startswith(os.path.abspath(os.environ["FIXTURE_ROOT"]) + os.sep)
+'
+    )
+  ); then
+    echo "[FAIL] Graphify --preinstalled isolation permits a snapshot-local graphify package"
+    return 1
+  fi
+
+  # A CLI or interpreter may be linked through an external path into the
+  # snapshot. Final-target realpaths must still fail the containment check.
+  if ! (
+    set -e
+    local fixture_root snapshot_root external_root cli_target python_target cli_link python_link
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-symlink-fixture.XXXXXX")"
+    trap 'rm -rf "$fixture_root"' EXIT
+    snapshot_root="$fixture_root/snapshot"
+    external_root="$fixture_root/external"
+    mkdir -p "$snapshot_root/bin" "$external_root"
+    snapshot_root="$(realpath "$snapshot_root")"
+    cli_target="$snapshot_root/bin/graphify"
+    python_target="$snapshot_root/bin/python"
+    : > "$cli_target"
+    : > "$python_target"
+    cli_link="$external_root/graphify"
+    python_link="$external_root/python"
+    ln -s "$cli_target" "$cli_link"
+    ln -s "$python_target" "$python_link"
+    for target in "$(realpath "$cli_link")" "$(realpath "$python_link")"; do
+      case "$target" in "$snapshot_root"|"$snapshot_root"/*) ;; *) exit 1 ;; esac
+    done
+  ); then
+    echo "[FAIL] Graphify --preinstalled containment check permits a symlink target inside the snapshot"
+    return 1
+  fi
+}
+
+repository_docs_graphify_validation_is_isolated() {
+  local contract
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    if ! grep -Fq -- 'python3 -I -m json.tool .agents/graphify-out/graph.json' "$contract"; then
+      echo "[FAIL] repository-docs Graphify validation in $contract must use isolated Python"
+      return 1
+    fi
+  done
+}
 
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
@@ -93,6 +315,45 @@ while IFS=$'\t' read -r agent skill; do
     fi
   fi
 done <<<"$WHITELIST"
+
+if ! repository_docs_route_is_exclusive; then
+  echo "[FAIL] repository-docs skill route must be allowed only by repository-docs"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_command_routes_to_agent; then
+  echo "[FAIL] /repository-docs command must be bound to repository-docs"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_command_keeps_subtask_enabled; then
+  echo "[FAIL] /repository-docs command must keep subtask enabled (true or omitted)"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_sanitized_git_environment_is_complete; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_route_uses_preinstalled_mode; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! graphify_preinstalled_mode_has_no_install_path; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_extract_keeps_default_ask; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! graphify_preinstalled_mode_is_isolated_from_snapshot; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_validation_is_isolated; then
+  fail_count=$((fail_count + 1))
+fi
 
 # --- Orphans: on-disk skills no agent allows (literal or via wildcard) — INFO ---
 orphan_count=0

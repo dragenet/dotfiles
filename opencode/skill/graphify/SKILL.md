@@ -25,6 +25,7 @@ Turn any folder of files into a navigable knowledge graph with community detecti
 /graphify https://github.com/<owner>/<repo> --branch <branch>  # clone a specific branch
 /graphify <url1> <url2> ...                           # clone multiple repos, build each, merge into one cross-repo graph
 /graphify <path> --mode deep                          # thorough extraction, richer INFERRED edges
+/graphify <path> --preinstalled                       # use only an already-installed Graphify; never install
 graphify extract <path> --out .agents                 # rebuild into .agents/graphify-out/
 /graphify <path> --directed                            # build directed graph (preserves edge direction: source→target)
 /graphify <path> --whisper-model medium                # use a larger Whisper model for better transcription accuracy
@@ -71,7 +72,75 @@ Follow these steps in order. Do not skip steps.
 
 Only when the path is one or more `https://github.com/...` URLs, or several local subfolders to merge. See `references/github-and-merge.md` for the clone, cross-repo merge, and monorepo flow, then continue with the resolved local path. A plain local path skips this step.
 
+### `--preinstalled` mode: use only an existing Graphify installation
+
+When `--preinstalled` is supplied, replace Step 1 with this mode. It is for
+callers that must not install software. It must only detect and use an
+already-installed usable Graphify CLI and interpreter. If either cannot be
+resolved, fail closed with the message below; never run `uv`, `pip`, or any
+package installer in this mode. Continue with Step 2 only after this succeeds.
+
+```bash
+GRAPHIFY_BIN=$(command -v graphify 2>/dev/null || true)
+if [ -z "$GRAPHIFY_BIN" ]; then
+    echo 'ERROR: --preinstalled requires an already-installed usable Graphify CLI; installation is disabled.' >&2
+    exit 1
+fi
+case "$GRAPHIFY_BIN" in
+    /*) ;;
+    *)
+        echo 'ERROR: --preinstalled resolved Graphify to a non-absolute path; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_BIN="$(realpath "$GRAPHIFY_BIN")"
+SNAPSHOT_ROOT="$(pwd -P)"
+case "$GRAPHIFY_BIN" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled must use a Graphify CLI outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_PYTHON=$(head -1 "$GRAPHIFY_BIN" | tr -d '#!')
+case "$GRAPHIFY_PYTHON" in
+    *[!a-zA-Z0-9/_.-]*|'')
+        echo 'ERROR: --preinstalled found Graphify but cannot resolve its usable interpreter; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+case "$GRAPHIFY_PYTHON" in
+    /*) ;;
+    *)
+        echo 'ERROR: --preinstalled resolved Graphify to a non-absolute interpreter; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_PYTHON="$(realpath "$GRAPHIFY_PYTHON")"
+case "$GRAPHIFY_PYTHON" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled must use a Graphify interpreter outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+SAFE_CWD="$(mktemp -d "${HOME}/.agents/graphify-preinstalled.XXXXXX")"
+case "$SAFE_CWD" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled could not create a safe working directory outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+if ! (cd "$SAFE_CWD" && "$GRAPHIFY_PYTHON" -I -c 'import graphify' >/dev/null 2>&1) \
+  || ! (cd "$SAFE_CWD" && "$GRAPHIFY_BIN" --help >/dev/null 2>&1); then
+    echo 'ERROR: --preinstalled requires an already-installed usable Graphify CLI and interpreter; installation is disabled.' >&2
+    exit 1
+fi
+mkdir -p .agents/graphify-out
+(cd "$SAFE_CWD" && "$GRAPHIFY_PYTHON" -I -c 'import sys; from pathlib import Path; Path(sys.argv[1]).write_text(sys.executable, encoding="utf-8")' "$SNAPSHOT_ROOT/.agents/graphify-out/.graphify_python")
+```
+
 ### Step 1 - Ensure graphify is installed
+
+Without `--preinstalled`, use this normal installation behavior unchanged.
 
 ```bash
 # Detect the correct Python interpreter (handles uv tool, pipx, venv, system installs)
@@ -111,7 +180,7 @@ echo "$(cd INPUT_PATH && pwd)" > .agents/graphify-out/.graphify_root
 
 If the import succeeds, print nothing and move straight to Step 2.
 
-**In every subsequent bash block, replace `python3` with `$(cat .agents/graphify-out/.graphify_python)` to use the correct interpreter.**
+**In every subsequent bash block, replace `python3` with `$(cat .agents/graphify-out/.graphify_python)` to use the correct interpreter. When `--preinstalled` is active, append `-I` to every such Python invocation; isolated mode prevents a snapshot-local package from influencing the already-validated interpreter.**
 
 ### Step 2 - Detect files
 
