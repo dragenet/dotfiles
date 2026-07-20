@@ -78,3 +78,38 @@ Task3 review findings addressed:
 | `bash opencode/scripts/test-repository-docs.sh` | `PASS` (35/35) |
 
 All checks pass. No deployment, symlink, or bootstrap changes.
+
+---
+
+## Remediation (2026-07-20): Task3 Re-Review Important Findings
+
+Three Important findings from the Task3 re-review:
+
+| # | Finding | Severity | Resolution | File |
+|---|---------|----------|-----------|------|
+| 1 | Index/HEAD hash misses unstaged modifications | Important | Replaced hash with deterministic working-tree content hashing (`find -not -path ./.git -type f -exec shasum`), added `status --porcelain` assertion | `scripts/test-repository-docs.sh` |
+| 2 | external_directory only checked live, not compared | Important | Enforce exact `{"*":"ask","~/.agents/repositories/**":"allow"}` in both staged and live configs via `jq -c` object comparison | `scripts/check-skill-whitelists.sh` |
+| 3 | Graphify task mapping only checked live, not exact | Important | Check both staged and live graphify agent frontmatter for exact `{ "*": "deny", "graphify-extractor": "allow" }` with entry-count enforcement (exactly 2 lines) | `scripts/check-skill-whitelists.sh` |
+
+### Changes
+
+**`scripts/test-repository-docs.sh`:**
+- `FIXTURE_CONTENT_HASH`: replaced `git ls-files -s && git rev-parse HEAD` with `find . -not -path './.git/*' -not -path './.git' -type f -exec shasum -a 256 {} \; | sort -k2 | shasum -a 256` — deterministic, Git-agnostic working-tree fingerprint
+- `FIXTURE_SENTINEL`: moved from `$smoke_root/source/.fixture-sentinel` to `$smoke_root/.fixture-sentinel` (outside repo, avoids untracked-file pollution)
+- Added `status --porcelain` assertion: `sanitized_git -C "$smoke_root/source" status --porcelain` must be empty
+
+**`scripts/check-skill-whitelists.sh`:**
+- `stage_live_repository_docs_external_directory_is_restricted()`: replaced per-key `jq -r` checks with `jq -c` exact object comparison against `{"*":"ask","~/.agents/repositories/**":"allow"}` for both staged and live configs, then cross-compares staged vs live objects
+- `stage_live_graphify_task_only_to_extractor()`: added staged graphify agent frontmatter check (previously only live), added entry-count assertion (`grep -c .` must equal 2) for both staged and live
+
+### Post-Remediation Validation
+
+| Command | Result |
+|---------|--------|
+| `bash -n opencode/scripts/check-skill-whitelists.sh` | syntax OK |
+| `bash -n opencode/scripts/test-repository-docs.sh` | syntax OK |
+| `python3 -m json.tool opencode/opencode.jsonc` | `valid` |
+| `bash opencode/scripts/check-skill-whitelists.sh` | `PASS` (122 entries, 5 orphans, exit 0) |
+| `bash opencode/scripts/test-repository-docs.sh` | `PASS` (36/36, exit 0) |
+
+Commit: `7acf83d` — `fix(opencode): harden repository-docs Task3 Important findings`
