@@ -20,7 +20,6 @@ permission:
     "git show*": allow
     "git for-each-ref*": allow
     "git tag*": deny
-    "graphify extract*": allow
     "graphify query*": allow
     "ls *": allow
     "find *": ask
@@ -177,7 +176,7 @@ working directory.
       fail closed without installing it or delegating installation. Invoke
       `@graphify` only to extract the snapshot: `graphify extract . --out .agents --preinstalled`
      from within the snapshot directory.
-   - Validate the output: `python3 -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
+    - Validate the output: `python3 -I -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.
 
 ## `query` Workflow

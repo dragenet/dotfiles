@@ -540,7 +540,6 @@
           "git show*": "allow",
           "git for-each-ref*": "allow",
           "git tag*": "deny",
-          "graphify extract*": "allow",
           "graphify query*": "allow",
           "ls *": "allow",
           "find *": "ask",

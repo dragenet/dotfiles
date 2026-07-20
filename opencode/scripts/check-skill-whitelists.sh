@@ -141,6 +141,80 @@ graphify_preinstalled_mode_has_no_install_path() {
   fi
 }
 
+repository_docs_graphify_extract_keeps_default_ask() {
+  if grep -Fq -- '"graphify extract*": allow' "$REPOSITORY_DOCS_AGENT_CONTRACT"; then
+    echo "[FAIL] repository-docs agent frontmatter must not auto-allow graphify extract"
+    return 1
+  fi
+  if ! jq -e '.agent["repository-docs"].permission.bash | has("graphify extract*") | not' "$CONFIG" >/dev/null; then
+    echo "[FAIL] repository-docs staged configuration must not auto-allow graphify extract"
+    return 1
+  fi
+}
+
+graphify_preinstalled_mode_is_isolated_from_snapshot() {
+  local mode
+  mode="$(awk '
+    /^### `--preinstalled` mode:/ { in_mode = 1 }
+    in_mode { print }
+    in_mode && /^### Step 1 / { exit }
+  ' "$GRAPHIFY_SKILL_CONTRACT")"
+
+  for required in \
+    'GRAPHIFY_BIN="$(cd -P' \
+    'SNAPSHOT_ROOT="$(pwd -P)"' \
+    'GRAPHIFY_PYTHON="$(cd -P' \
+    'SAFE_CWD="$(mktemp -d' \
+    '"$GRAPHIFY_PYTHON" -I -c' \
+    '"$GRAPHIFY_BIN" --help'; do
+    if ! grep -Fq -- "$required" <<<"$mode"; then
+      echo "[FAIL] Graphify --preinstalled mode must require $required"
+      return 1
+    fi
+  done
+
+  if ! grep -Fq -- 'append `-I` to every such Python invocation' "$GRAPHIFY_SKILL_CONTRACT"; then
+    echo "[FAIL] Graphify --preinstalled mode must require isolated execution for every later Python invocation"
+    return 1
+  fi
+
+  # A snapshot-local graphify package must not be importable by the documented
+  # isolated preflight, even when an inherited PYTHONPATH points at it.
+  if ! (
+    set -e
+    local fixture_root safe_cwd
+    fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-fixture.XXXXXX")"
+    safe_cwd="$(mktemp -d "${TMPDIR:-/tmp}/graphify-preinstalled-safe.XXXXXX")"
+    trap 'rm -rf "$fixture_root" "$safe_cwd"' EXIT
+    mkdir -p "$fixture_root/graphify"
+    printf 'raise RuntimeError("snapshot-local graphify was imported")\n' > "$fixture_root/graphify/__init__.py"
+    (
+      cd "$safe_cwd"
+      FIXTURE_ROOT="$fixture_root" PYTHONPATH="$fixture_root" python3 -I -c '
+import importlib.util
+import os
+spec = importlib.util.find_spec("graphify")
+assert spec is None or not os.path.abspath(spec.origin or "").startswith(os.path.abspath(os.environ["FIXTURE_ROOT"]) + os.sep)
+'
+    )
+  ); then
+    echo "[FAIL] Graphify --preinstalled isolation permits a snapshot-local graphify package"
+    return 1
+  fi
+}
+
+repository_docs_graphify_validation_is_isolated() {
+  local contract
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    if ! grep -Fq -- 'python3 -I -m json.tool .agents/graphify-out/graph.json' "$contract"; then
+      echo "[FAIL] repository-docs Graphify validation in $contract must use isolated Python"
+      return 1
+    fi
+  done
+}
+
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
 is_builtin() {
@@ -205,6 +279,18 @@ if ! repository_docs_graphify_route_uses_preinstalled_mode; then
 fi
 
 if ! graphify_preinstalled_mode_has_no_install_path; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_extract_keeps_default_ask; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! graphify_preinstalled_mode_is_isolated_from_snapshot; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_validation_is_isolated; then
   fail_count=$((fail_count + 1))
 fi
 

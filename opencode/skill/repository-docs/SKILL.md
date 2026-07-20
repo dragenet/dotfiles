@@ -232,7 +232,7 @@ file and validate its JSON before success:
 
 ```text
 .agents/graphify-out/graph.json
-python3 -m json.tool .agents/graphify-out/graph.json
+python3 -I -m json.tool .agents/graphify-out/graph.json
 ```
 
 Report the repository identity, resolved commit, immutable snapshot path, and
@@ -352,7 +352,7 @@ python3 -m json.tool "$snapshot/.agents/repository-docs-manifest.json" >/dev/nul
 
 Require an already-installed Graphify binary. Run `graphify extract . --out
 .agents` from `$snapshot`, then require
-`python3 -m json.tool "$snapshot/.agents/graphify-out/graph.json" >/dev/null`.
+`python3 -I -m json.tool "$snapshot/.agents/graphify-out/graph.json" >/dev/null`.
 If Graphify is unavailable, the harness must fail closed; it must not install,
 delegate installation, or create a graph stub. The smoke flow must never write
 to the real `$HOME/.agents/repositories` corpus because `HOME` is redirected

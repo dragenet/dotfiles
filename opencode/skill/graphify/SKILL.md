@@ -86,19 +86,56 @@ if [ -z "$GRAPHIFY_BIN" ]; then
     echo 'ERROR: --preinstalled requires an already-installed usable Graphify CLI; installation is disabled.' >&2
     exit 1
 fi
-_SHEBANG=$(head -1 "$GRAPHIFY_BIN" | tr -d '#!')
-case "$_SHEBANG" in
+case "$GRAPHIFY_BIN" in
+    /*) ;;
+    *)
+        echo 'ERROR: --preinstalled resolved Graphify to a non-absolute path; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_BIN="$(cd -P "$(dirname "$GRAPHIFY_BIN")" && pwd -P)/$(basename "$GRAPHIFY_BIN")"
+SNAPSHOT_ROOT="$(pwd -P)"
+case "$GRAPHIFY_BIN" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled must use a Graphify CLI outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_PYTHON=$(head -1 "$GRAPHIFY_BIN" | tr -d '#!')
+case "$GRAPHIFY_PYTHON" in
     *[!a-zA-Z0-9/_.-]*|'')
         echo 'ERROR: --preinstalled found Graphify but cannot resolve its usable interpreter; installation is disabled.' >&2
         exit 1
         ;;
 esac
-if ! "$_SHEBANG" -c 'import graphify' >/dev/null 2>&1 || ! "$GRAPHIFY_BIN" --help >/dev/null 2>&1; then
+case "$GRAPHIFY_PYTHON" in
+    /*) ;;
+    *)
+        echo 'ERROR: --preinstalled resolved Graphify to a non-absolute interpreter; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+GRAPHIFY_PYTHON="$(cd -P "$(dirname "$GRAPHIFY_PYTHON")" && pwd -P)/$(basename "$GRAPHIFY_PYTHON")"
+case "$GRAPHIFY_PYTHON" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled must use a Graphify interpreter outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+SAFE_CWD="$(mktemp -d "${HOME}/.agents/graphify-preinstalled.XXXXXX")"
+case "$SAFE_CWD" in
+    "$SNAPSHOT_ROOT"|"$SNAPSHOT_ROOT"/*)
+        echo 'ERROR: --preinstalled could not create a safe working directory outside the snapshot; installation is disabled.' >&2
+        exit 1
+        ;;
+esac
+if ! (cd "$SAFE_CWD" && "$GRAPHIFY_PYTHON" -I -c 'import graphify' >/dev/null 2>&1) \
+  || ! (cd "$SAFE_CWD" && "$GRAPHIFY_BIN" --help >/dev/null 2>&1); then
     echo 'ERROR: --preinstalled requires an already-installed usable Graphify CLI and interpreter; installation is disabled.' >&2
     exit 1
 fi
 mkdir -p .agents/graphify-out
-"$_SHEBANG" -c "import sys; open('.agents/graphify-out/.graphify_python', 'w', encoding='utf-8').write(sys.executable)"
+(cd "$SAFE_CWD" && "$GRAPHIFY_PYTHON" -I -c 'import sys; from pathlib import Path; Path(sys.argv[1]).write_text(sys.executable, encoding="utf-8")' "$SNAPSHOT_ROOT/.agents/graphify-out/.graphify_python")
 ```
 
 ### Step 1 - Ensure graphify is installed
@@ -143,7 +180,7 @@ echo "$(cd INPUT_PATH && pwd)" > .agents/graphify-out/.graphify_root
 
 If the import succeeds, print nothing and move straight to Step 2.
 
-**In every subsequent bash block, replace `python3` with `$(cat .agents/graphify-out/.graphify_python)` to use the correct interpreter.**
+**In every subsequent bash block, replace `python3` with `$(cat .agents/graphify-out/.graphify_python)` to use the correct interpreter. When `--preinstalled` is active, append `-I` to every such Python invocation; isolated mode prevents a snapshot-local package from influencing the already-validated interpreter.**
 
 ### Step 2 - Detect files
 
