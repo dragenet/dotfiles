@@ -223,7 +223,7 @@ delegate installation, or create a substitute graph. Delegate only indexing to
 extraction:
 
 ```text
-graphify extract . --out .agents
+graphify extract . --out .agents --preinstalled
 ```
 
 Do not use `graphify update`, do not create output elsewhere, and do not run a

@@ -30,6 +30,7 @@ REPOSITORY_DOCS_AGENT="repository-docs"
 REPOSITORY_DOCS_SKILL="repository-docs"
 REPOSITORY_DOCS_SKILL_CONTRACT="$REPO_ROOT/skill/repository-docs/SKILL.md"
 REPOSITORY_DOCS_AGENT_CONTRACT="$REPO_ROOT/agents/repository-docs.md"
+GRAPHIFY_SKILL_CONTRACT="$REPO_ROOT/skill/graphify/SKILL.md"
 REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS=(
   "GIT_SSH_COMMAND"
   "GIT_SSH"
@@ -112,6 +113,34 @@ repository_docs_sanitized_git_environment_is_complete() {
   done
 }
 
+# Repository snapshots may only delegate Graphify through its documented
+# no-install mode. Inspect that mode's code block separately so normal Graphify
+# installation instructions remain available to ordinary Graphify invocations.
+repository_docs_graphify_route_uses_preinstalled_mode() {
+  local contract
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    if ! grep -Fq -- "graphify extract . --out .agents --preinstalled" "$contract"; then
+      echo "[FAIL] repository-docs Graphify extraction in $contract must use --preinstalled"
+      return 1
+    fi
+  done
+}
+
+graphify_preinstalled_mode_has_no_install_path() {
+  if ! awk '
+    /^### `--preinstalled` mode:/ { in_mode = 1; next }
+    in_mode && /^### / { exit }
+    in_mode && /^```bash$/ { in_code = !in_code; saw_code = 1; next }
+    in_mode && in_code && /(^|[^[:alnum:]_-])(uv|pip|installer|install)([^[:alnum:]_-]|$)/ { forbidden = 1 }
+    END { exit !(in_mode && saw_code && !forbidden) }
+  ' "$GRAPHIFY_SKILL_CONTRACT"; then
+    echo "[FAIL] Graphify --preinstalled mode must contain a detection-only code path with no installer command"
+    return 1
+  fi
+}
+
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
 is_builtin() {
@@ -168,6 +197,14 @@ if ! repository_docs_command_keeps_subtask_enabled; then
 fi
 
 if ! repository_docs_sanitized_git_environment_is_complete; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_graphify_route_uses_preinstalled_mode; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! graphify_preinstalled_mode_has_no_install_path; then
   fail_count=$((fail_count + 1))
 fi
 

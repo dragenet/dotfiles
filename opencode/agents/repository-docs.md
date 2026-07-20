@@ -175,7 +175,7 @@ working directory.
 7. **Delegate to Graphify:**
     - Require the Graphify CLI to be already installed and available; otherwise
       fail closed without installing it or delegating installation. Invoke
-      `@graphify` only to extract the snapshot: `graphify extract . --out .agents`
+      `@graphify` only to extract the snapshot: `graphify extract . --out .agents --preinstalled`
      from within the snapshot directory.
    - Validate the output: `python3 -m json.tool .agents/graphify-out/graph.json > /dev/null && echo 'valid'`.
    - Report the snapshot path, commit, and extraction result.
