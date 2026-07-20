@@ -372,10 +372,11 @@ $ sed -n '/Validate the URL/,/Validate the ref/p' opencode/agents/repository-doc
 - The constrained fetch now includes `--no-recurse-submodules`.
 - The hard prohibition scopes user-info rejection to HTTPS. SSH remotes permit
   only `git@`; all other SSH usernames remain rejected.
-- `autopilot` retains its `using-git-worktrees` skill permission. Git history
-  search found no introduction of that whitelist entry in
-  `abb714b..2bf8843`, so removing it was out of scope.
-- `opencode.jsonc` was not changed for this closure.
+- Removed `autopilot`'s `using-git-worktrees` skill permission. Git history
+  shows that `2bf8843`, inside `abb714b..2bf8843`, introduced that whitelist
+  entry.
+- `opencode.jsonc` changed only to remove that in-range introduction; all
+  other permission rules remain unchanged.
 
 ## Validation
 
@@ -383,5 +384,5 @@ $ sed -n '/Validate the URL/,/Validate the ref/p' opencode/agents/repository-doc
 |-------|--------|
 | Repository-docs contract assertions | PASS |
 | `python3 -c "import json; json.load(open('opencode.jsonc')); print('valid')"` | `valid` |
-| `bash scripts/check-skill-whitelists.sh` | PASS — 122/122 entries resolve; 5 pre-existing informational orphan skills |
+| `bash scripts/check-skill-whitelists.sh` | PASS — 121/121 entries resolve; 5 pre-existing informational orphan skills |
 | `git diff --check` | PASS |
