@@ -279,6 +279,34 @@ repository_docs_graphify_validation_is_isolated() {
   done
 }
 
+# repository-docs must preserve the inherited ask default for every direct Git
+# command. Its sanitized_git wrapper is documentation, not authorization for a
+# native bash auto-allow; Git operations must remain approval-gated.
+repository_docs_has_no_direct_git_allows() {
+  local config contract
+  local configs=("$CONFIG" "$LIVE_CONFIG")
+  local contracts=("$REPOSITORY_DOCS_AGENT_CONTRACT" "$LIVE_AGENTS/repository-docs.md")
+
+  for config in "${configs[@]}"; do
+    if ! jq -e '
+      [.agent["repository-docs"].permission.bash | to_entries[]
+       | select(.key | test("^git($|[[:space:]])"))
+       | select(.value == "allow")]
+      | length == 0
+    ' "$config" >/dev/null; then
+      echo "[FAIL] repository-docs configuration $config must not auto-allow direct Git commands"
+      return 1
+    fi
+  done
+
+  for contract in "${contracts[@]}"; do
+    if grep -Eq '^[[:space:]]*"git($|[[:space:]])[^\"]*"[[:space:]]*:[[:space:]]*allow([[:space:]]|$)' "$contract"; then
+      echo "[FAIL] repository-docs agent frontmatter $contract must not auto-allow direct Git commands"
+      return 1
+    fi
+  done
+}
+
 # --- Staged ↔ live config drift assertions ---
 
 stage_live_agent_frontmatter_identical() {
@@ -473,6 +501,10 @@ if ! graphify_preinstalled_mode_is_isolated_from_snapshot; then
 fi
 
 if ! repository_docs_graphify_validation_is_isolated; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_has_no_direct_git_allows; then
   fail_count=$((fail_count + 1))
 fi
 

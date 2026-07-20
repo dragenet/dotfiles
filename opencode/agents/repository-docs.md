@@ -13,12 +13,6 @@ permission:
     "git init*": ask
     "git fetch*": ask
     "git checkout*": ask
-    "git status*": allow
-    "git rev-parse*": allow
-    "git fsck*": allow
-    "git log*": allow
-    "git show*": allow
-    "git for-each-ref*": allow
     "git tag*": deny
     "graphify query*": allow
     "ls *": allow

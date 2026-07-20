@@ -113,3 +113,30 @@ Three Important findings from the Task3 re-review:
 | `bash opencode/scripts/test-repository-docs.sh` | `PASS` (36/36, exit 0) |
 
 Commit: `7acf83d` — `fix(opencode): harden repository-docs Task3 Important findings`
+
+---
+
+## Final Critical Fix (2026-07-20): Remove Direct Git Auto-Allows
+
+**Finding:** The `repository-docs` agent's direct Git bash patterns were
+auto-allowed in its staged/live JSONC permissions and staged/live frontmatter.
+This bypassed the required inherited `"*": "ask"` approval default.
+
+**Resolution:** Removed every direct Git `allow` pattern from both JSONC agent
+objects and both frontmatter headers. Existing `ask` and `deny` Git patterns
+remain unchanged; no substitute allow was introduced. Added
+`repository_docs_has_no_direct_git_allows()` to
+`scripts/check-skill-whitelists.sh`, which independently rejects direct Git
+`allow` entries in each staged/live JSONC config and each staged/live agent
+frontmatter header.
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `bash scripts/check-skill-whitelists.sh` before removal | Expected failure: staged direct Git auto-allow detected |
+| `bash -n scripts/check-skill-whitelists.sh && bash -n scripts/test-repository-docs.sh` | PASS (exit 0) |
+| `python3 -c "import json; ..."` for staged/live JSONC | PASS: `staged/live JSONC parse: valid` (exit 0) |
+| `bash scripts/check-skill-whitelists.sh` | PASS: 122 entries, 5 informational orphans (exit 0) |
+| `bash scripts/test-repository-docs.sh` | PASS: 36/36 (exit 0) |
+| `git diff --check` | PASS (exit 0) |
