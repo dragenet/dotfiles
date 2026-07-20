@@ -84,14 +84,17 @@ You must **never**:
 
 Every Git invocation in this workflow must run through this single
 `sanitized_git` environment wrapper; do not invoke `git` directly. It clears
-inherited repository-location and object-store variables, suppresses all
-configuration sources and injected configuration, and disables hooks:
+inherited repository-location, object-store, SSH-command, askpass, and
+Git-executable-path variables, suppresses all configuration sources and
+injected configuration, and disables hooks. It does not suppress normal Git
+credential handling or write credentials:
 
 ```bash
 sanitized_git() {
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
     -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
-    -u GIT_CONFIG_PARAMETERS \
+    -u GIT_CONFIG_PARAMETERS -u GIT_SSH_COMMAND -u GIT_SSH \
+    -u GIT_ASKPASS -u SSH_ASKPASS -u GIT_EXEC_PATH \
     GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null \
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 \
     XDG_CONFIG_HOME=<empty-config-dir> \

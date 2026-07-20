@@ -28,6 +28,15 @@ CONFIG="${OPENCODE_CONFIG_PATH:-$REPO_ROOT/opencode.jsonc}"
 KNOWN_BUILTINS=("customize-opencode")
 REPOSITORY_DOCS_AGENT="repository-docs"
 REPOSITORY_DOCS_SKILL="repository-docs"
+REPOSITORY_DOCS_SKILL_CONTRACT="$REPO_ROOT/skill/repository-docs/SKILL.md"
+REPOSITORY_DOCS_AGENT_CONTRACT="$REPO_ROOT/agents/repository-docs.md"
+REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS=(
+  "GIT_SSH_COMMAND"
+  "GIT_SSH"
+  "GIT_ASKPASS"
+  "SSH_ASKPASS"
+  "GIT_EXEC_PATH"
+)
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "[FAIL] jq is required but not found" >&2
@@ -75,6 +84,32 @@ repository_docs_command_routes_to_agent() {
 
 repository_docs_command_keeps_subtask_enabled() {
   jq -e '.command["repository-docs"] | if has("subtask") then .subtask == true else true end' "$CONFIG" >/dev/null
+}
+
+# Every documented sanitized_git wrapper must clear command-execution overrides.
+# Check wrapper blocks individually so a token in the fixture cannot mask an
+# omission from the production contract (or vice versa).
+repository_docs_sanitized_git_environment_is_complete() {
+  local contract required
+  local contracts=("$REPOSITORY_DOCS_SKILL_CONTRACT" "$REPOSITORY_DOCS_AGENT_CONTRACT")
+
+  for contract in "${contracts[@]}"; do
+    for required in "${REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS[@]}"; do
+      if ! awk -v required="$required" '
+        /^sanitized_git\(\) \{/ { in_wrapper = 1; found = 0; wrappers++; next }
+        in_wrapper && /^}/ {
+          if (!found) missing = 1
+          in_wrapper = 0
+          next
+        }
+        in_wrapper && $0 ~ ("-u[[:space:]]+" required "([[:space:]]|$)") { found = 1 }
+        END { exit !(wrappers > 0 && !missing) }
+      ' "$contract"; then
+        echo "[FAIL] every repository-docs sanitized_git wrapper in $contract must clear $required"
+        return 1
+      fi
+    done
+  done
 }
 
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
@@ -129,6 +164,10 @@ fi
 
 if ! repository_docs_command_keeps_subtask_enabled; then
   echo "[FAIL] /repository-docs command must keep subtask enabled (true or omitted)"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_sanitized_git_environment_is_complete; then
   fail_count=$((fail_count + 1))
 fi
 
