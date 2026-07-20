@@ -41,6 +41,9 @@ REPOSITORY_DOCS_GIT_ENVIRONMENT_VARS=(
 )
 REPOSITORY_DOCS_TRUSTED_SSH_COMMAND='GIT_SSH_COMMAND="/usr/bin/ssh -F none"'
 
+LIVE_CONFIG="${HOME}/.config/opencode/opencode.jsonc"
+LIVE_AGENTS="${HOME}/.config/opencode/agents"
+
 if ! command -v jq >/dev/null 2>&1; then
   echo "[FAIL] jq is required but not found" >&2
   exit 1
@@ -276,6 +279,94 @@ repository_docs_graphify_validation_is_isolated() {
   done
 }
 
+# --- Staged ↔ live config drift assertions ---
+
+stage_live_agent_frontmatter_identical() {
+  local agent="$1" staged_file="$2" live_file="$3"
+  if [[ ! -f "$staged_file" ]]; then
+    echo "[FAIL] staged agent $agent not found at $staged_file"
+    return 1
+  fi
+  if [[ ! -f "$live_file" ]]; then
+    echo "[FAIL] live agent $agent not found at $live_file"
+    return 1
+  fi
+  if ! diff -q "$staged_file" "$live_file" >/dev/null 2>&1; then
+    echo "[FAIL] staged and live $agent agent frontmatter differ — config drift"
+    return 1
+  fi
+}
+
+stage_live_command_binding_identical() {
+  local cmd="$1"
+  local staged_binding live_binding
+  staged_binding="$(jq -r --arg c "$cmd" '.command[$c] // {}' "$CONFIG")"
+  live_binding="$(jq -r --arg c "$cmd" '.command[$c] // {}' "$LIVE_CONFIG")"
+  if [[ "$staged_binding" != "$live_binding" ]]; then
+    echo "[FAIL] staged and live command $cmd binding differ — config drift"
+    return 1
+  fi
+}
+
+stage_live_permission_object_identical() {
+  local agent="$1" perm="$2" key="$3"
+  local staged_obj live_obj
+  staged_obj="$(jq -r --arg a "$agent" --arg p "$perm" --arg k "$key" \
+    '.agent[$a].permission[$p][$k] // "MISSING"' "$CONFIG")"
+  live_obj="$(jq -r --arg a "$agent" --arg p "$perm" --arg k "$key" \
+    '.agent[$a].permission[$p][$k] // "MISSING"' "$LIVE_CONFIG")"
+  if [[ "$staged_obj" != "$live_obj" ]]; then
+    echo "[FAIL] staged and live $agent permission $perm.$key differ — config drift"
+    return 1
+  fi
+}
+
+stage_live_repository_docs_route_is_exclusive() {
+  local routes
+  routes="$(jq -r --arg skill "$REPOSITORY_DOCS_SKILL" '
+    .agent | to_entries[]
+    | select((.value.permission.skill // {})[$skill] == "allow")
+    | .key
+  ' "$LIVE_CONFIG")"
+  [[ "$routes" == "$REPOSITORY_DOCS_AGENT" ]]
+}
+
+stage_live_graphify_task_only_to_extractor() {
+  local live_file="$LIVE_AGENTS/graphify.md"
+  if [[ ! -f "$live_file" ]]; then
+    echo "[FAIL] live graphify agent file not found at $live_file"
+    return 1
+  fi
+  # Extract the task permission block from YAML frontmatter
+  local task_block
+  task_block="$(awk '/^permission:/{in_perm=1; next} in_perm && /^  task:/{in_task=1; next} in_task && /^  [a-z]/ && !/^    /{exit} in_task {print}' "$live_file")"
+  if ! echo "$task_block" | grep -q '"\*": deny'; then
+    echo "[FAIL] live graphify task permission missing deny-all"
+    return 1
+  fi
+  if ! echo "$task_block" | grep -q 'graphify-extractor: allow'; then
+    echo "[FAIL] live graphify task permission missing graphify-extractor allow"
+    return 1
+  fi
+}
+
+stage_live_repository_docs_external_directory_is_restricted() {
+  local ext_dir
+  ext_dir="$(jq -r '.agent["repository-docs"].permission.external_directory // {}' "$LIVE_CONFIG")"
+  if [[ "$(echo "$ext_dir" | jq -r '.["*"]')" != "ask" ]]; then
+    echo "[FAIL] live repository-docs external_directory missing ask-all"
+    return 1
+  fi
+  if [[ "$(echo "$ext_dir" | jq -r '.["~/.agents/repositories/**"]')" != "allow" ]]; then
+    echo "[FAIL] live repository-docs external_directory missing managed corpus allow"
+    return 1
+  fi
+  if [[ "$(echo "$ext_dir" | jq -r 'keys | length')" -ne 2 ]]; then
+    echo "[FAIL] live repository-docs external_directory has unexpected entries"
+    return 1
+  fi
+}
+
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
 is_builtin() {
@@ -352,6 +443,49 @@ if ! graphify_preinstalled_mode_is_isolated_from_snapshot; then
 fi
 
 if ! repository_docs_graphify_validation_is_isolated; then
+  fail_count=$((fail_count + 1))
+fi
+
+# --- Staged ↔ live config drift assertions ---
+
+if ! stage_live_agent_frontmatter_identical "repository-docs" \
+  "$REPOSITORY_DOCS_AGENT_CONTRACT" \
+  "$LIVE_AGENTS/repository-docs.md"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_agent_frontmatter_identical "graphify" \
+  "$REPO_ROOT/agents/graphify.md" \
+  "$LIVE_AGENTS/graphify.md"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_command_binding_identical "repository-docs"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_permission_object_identical "repository-docs" "skill" "repository-docs"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_permission_object_identical "repository-docs" "skill" "graphify"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_permission_object_identical "graphify" "skill" "graphify"; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_repository_docs_route_is_exclusive; then
+  echo "[FAIL] live repository-docs skill route must be allowed only by repository-docs — config drift"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_graphify_task_only_to_extractor; then
+  fail_count=$((fail_count + 1))
+fi
+
+if ! stage_live_repository_docs_external_directory_is_restricted; then
   fail_count=$((fail_count + 1))
 fi
 

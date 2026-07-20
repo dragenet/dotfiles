@@ -56,6 +56,12 @@ sanitized_git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
 sanitized_git init --bare --no-template "$smoke_root/fixture.git"
 sanitized_git -C "$smoke_root/source" push "$smoke_root/fixture.git" HEAD:refs/heads/main --tags
 
+# Fixture execution sentinel: prove the test workflow never modified repository content.
+# Compute a content hash after fixture setup; assert it is unchanged at teardown.
+FIXTURE_SENTINEL="$smoke_root/source/.fixture-sentinel"
+touch "$FIXTURE_SENTINEL"
+FIXTURE_CONTENT_HASH="$( (cd "$smoke_root/source" && sanitized_git ls-files -s && sanitized_git rev-parse HEAD) | shasum -a 256 | awk '{print $1}')"
+
 echo ""
 
 # ── Fixture preconditions ─────────────────────────────────────────────────────
@@ -343,7 +349,7 @@ if command -v graphify >/dev/null 2>&1; then
     _fail "graph.json not found at expected path"
   fi
 else
-  echo "  INFO: graphify CLI not found — skipping Graphify preinstalled-mode tests"
+  _fail "graphify CLI not found — must be preinstalled (fail closed, no skip)"
 fi
 
 echo ""
@@ -374,6 +380,25 @@ case "$snapshot" in
     _fail "snapshot is NOT under disposable test root: $snapshot"
     ;;
 esac
+
+echo ""
+
+# ── Fixture content unchanged assertion ────────────────────────────────────────
+
+echo "== Fixture content integrity =="
+
+if [ -f "$FIXTURE_SENTINEL" ]; then
+  _pass "fixture execution sentinel exists"
+else
+  _fail "fixture execution sentinel is missing"
+fi
+
+CURRENT_FIXTURE_HASH="$( (cd "$smoke_root/source" && sanitized_git ls-files -s && sanitized_git rev-parse HEAD) | shasum -a 256 | awk '{print $1}')"
+if [ "$CURRENT_FIXTURE_HASH" = "$FIXTURE_CONTENT_HASH" ]; then
+  _pass "fixture content hash unchanged — test workflow did not modify repository content"
+else
+  _fail "fixture content hash changed — test workflow modified repository content"
+fi
 
 echo ""
 
