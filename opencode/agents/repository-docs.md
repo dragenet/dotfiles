@@ -94,7 +94,8 @@ You must **never**:
 
 2. **Validate the ref:**
    - Reject if `--ref` is missing, empty, abbreviated (< 40 hex chars for
-     commit SHAs), contains `^`, `~`, `{`, `}`, or starts with `-`.
+     commit SHAs), contains `^`, `~`, `{`, `}`, `*`, `?`, or `[`, or starts
+     with `-`.
    - Accept a full 40-hex commit SHA, a branch name, or a tag name.
 
 3. **Resolve the ref to a full 40-hex commit:**
@@ -117,15 +118,16 @@ You must **never**:
 5. **Initialize, fetch, and checkout without repository-side configuration:**
     - Create a dedicated empty temporary directory for `XDG_CONFIG_HOME`.
       Prefix every Git command that opens the checkout with
-      `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir>`
-      and `-c core.hooksPath=/dev/null`; this prevents system/global filter
-      processes and hooks from running.
-    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
-    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> remote add origin -- <url>`
-    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules origin <40-hex-commit>`
-    - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
-    - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
-    - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
+       `GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir>`
+       and `-c core.hooksPath=/dev/null`; this prevents system/global and
+       injected environment configuration from restoring filter processes,
+       URL rewrites, or hooks.
+     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <target-path>`
+     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> remote add origin -- <url>`
+     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fetch --no-tags --no-recurse-submodules origin <40-hex-commit>`
+     - `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> checkout --detach <40-hex-commit>`
+     - Verify clean status: `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> status --porcelain` must be empty.
+     - Run `env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <target-path> fsck --no-progress` and reject if errors are found.
     - If any command fails, preserve the resulting destination as an
       incomplete conflict; do not clean it up or retry in place.
 

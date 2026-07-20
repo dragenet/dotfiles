@@ -74,7 +74,7 @@ Do not store the original remote URL, even when it passed validation.
 Require a non-empty ref value. Reject it when it:
 
 - starts with `-`;
-- contains `^`, `~`, `{`, or `}`;
+- contains `^`, `~`, `{`, `}`, `*`, `?`, or `[`;
 - contains a control character or whitespace that changes argument grammar;
 - is an abbreviated SHA or any hexadecimal commit value other than exactly
   40 ASCII hexadecimal characters; or
@@ -130,20 +130,22 @@ not overwrite, delete, reuse, repair, inspect, or infer that it is identical.
 
 Before initializing the destination, create a dedicated, empty temporary
 directory for `XDG_CONFIG_HOME`. Prefix every Git command that opens the
-checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`, and
-that `XDG_CONFIG_HOME`, as well as `-c core.hooksPath=/dev/null`. The
-environment prevents system/global configuration (including filter processes)
-from running; `core.hooksPath=/dev/null` separately disables hooks. Invoke the
-following commands as argument arrays, retaining the option order and using
-the validated URL, destination, and commit as literal arguments:
+checkout with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`,
+`GIT_CONFIG_COUNT=0`, `GIT_CONFIG_PARAMETERS=`, and that `XDG_CONFIG_HOME`,
+as well as `-c core.hooksPath=/dev/null`. The environment prevents
+system/global configuration and injected environment configuration (including
+filter processes and URL rewrites) from running; `core.hooksPath=/dev/null`
+separately disables hooks. Invoke the following commands as argument arrays,
+retaining the option order and using the validated URL, destination, and
+commit as literal arguments:
 
 ```text
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> remote add origin -- <url>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules origin <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
-env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null init --no-template <destination>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> remote add origin -- <url>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fetch --no-tags --no-recurse-submodules origin <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> checkout --detach <resolved-commit>
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> status --porcelain
+env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS= XDG_CONFIG_HOME=<empty-config-dir> git -c core.hooksPath=/dev/null -C <destination> fsck --no-progress
 ```
 
 The fetch is the required proof that a proposed raw SHA exists and is
@@ -249,8 +251,13 @@ with credentials), and condition: invalid remote/ref, unresolved or ambiguous
 ref, existing destination, fetch/checkout/clean/fsck failure, invalid manifest,
 or missing/invalid Graphify output.
 
+### Task3 test-harness-only local fixture
+
 Run this disposable local-fixture smoke flow only when an operator requests
-verification. It creates neither a real corpus entry nor a network connection:
+Task3 test-harness-only verification. The test runner, using its own setup
+permissions, performs every fixture setup action below; the production
+`repository-docs` specialist must never perform them. It creates neither a
+real corpus entry nor a network connection:
 
 ```bash
 set -euo pipefail
@@ -258,7 +265,7 @@ smoke_root="$(mktemp -d)"
 trap 'rm -rf "$smoke_root"' EXIT
 export HOME="$smoke_root/home"
 export XDG_CONFIG_HOME="$smoke_root/empty-xdg"
-export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=0 GIT_CONFIG_PARAMETERS=
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$smoke_root/source"
 
 git -c core.hooksPath=/dev/null init --no-template "$smoke_root/source"
@@ -280,13 +287,19 @@ test "$(git -C "$smoke_root/source" cat-file -t fixture-v1)" = tag
 test "$(git -C "$smoke_root/source" tag --list | wc -l | tr -d ' ')" = 1
 ```
 
-Before making a directory or invoking Git for an `add`, assert that the input
-validator rejects: a missing ref, abbreviated SHA, `--ref=-main`, `main^{}`, and
-`https://user:password@example.invalid/owner/repository.git`. Then use the
-fixture through the documented workflow, with
-`<url>="$smoke_root/fixture.git"`, `<ref>=fixture-v1`, and a destination below
+Production remote-validation assertions are separate from this fixture: assert
+that the input validator rejects a missing ref, abbreviated SHA, `--ref=-main`,
+`main^{}`, glob-containing refs, credential-bearing HTTPS URLs, and every local
+path or `file://` remote. A local/file remote does not pass production URL
+validation and must never be submitted to the production workflow.
+
+Separately, the Task3 harness may use
+`<url>="$smoke_root/fixture.git"` and `<ref>=fixture-v1` only to exercise the
+pure local Git and Graphify assertions below with test-runner permissions. This
+does not exercise production remote validation or require the production
+specialist to run setup actions it is denied. Its test-only destination is below
 `$HOME/.agents/repositories/fixture.invalid_owner_repository/<resolved-commit>`.
-Assert all of the following after the documented commands complete:
+After the harness completes its lower-level sanitized Git sequence, assert:
 
 ```bash
 test "$(git -C "$snapshot" rev-parse --verify HEAD)" = "$resolved_commit"

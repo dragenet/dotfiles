@@ -68,6 +68,11 @@ repository_docs_route_is_exclusive() {
   [[ "$routes" == "$REPOSITORY_DOCS_AGENT" ]]
 }
 
+repository_docs_command_routes_to_agent() {
+  jq -e --arg agent "$REPOSITORY_DOCS_AGENT" \
+    '.command["repository-docs"].agent == $agent' "$CONFIG" >/dev/null
+}
+
 is_disk_skill() { grep -Fxq -- "$1" <<<"$DISK_SKILLS"; }
 
 is_builtin() {
@@ -110,6 +115,11 @@ done <<<"$WHITELIST"
 
 if ! repository_docs_route_is_exclusive; then
   echo "[FAIL] repository-docs skill route must be allowed only by repository-docs"
+  fail_count=$((fail_count + 1))
+fi
+
+if ! repository_docs_command_routes_to_agent; then
+  echo "[FAIL] /repository-docs command must be bound to repository-docs"
   fail_count=$((fail_count + 1))
 fi
 
