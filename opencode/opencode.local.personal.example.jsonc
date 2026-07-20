@@ -27,5 +27,10 @@
     "graphify":         { "model": "opencode-go/deepseek-v4-flash" },
     "graphify-extractor": { "model": "opencode-go/deepseek-v4-flash" },
     "git":              { "model": "opencode-go/minimax-m3", "variant": "off" }
+  },
+  "mcp": {
+    "homeassistant": {"enabled": false},
+    "jira": {"enabled": false},
+    "stitch": {"enabled": false},
   }
 }

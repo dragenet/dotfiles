@@ -16,11 +16,12 @@
   "autoCaptureEnabled": true,
   "autoCaptureLanguage": "auto",
 
-  // Personal machines use anthropic as the primary provider (see
-  // docs/model-selection.md). "inherit" captures each prompt with whatever
-  // model actually answered it, so per-agent model overrides never go stale.
-  "opencodeProvider": "anthropic",
-  "opencodeModel": "inherit",
+  // Personal machines use opencode-go as the primary provider (see
+  // docs/model-selection.md). DeepSeek V4 Flash is an explicit cheap
+  // structured-extraction pin — not inherited from the session model —
+  // so memory capture stays predictable and low-cost.
+  "opencodeProvider": "opencode-go",
+  "opencodeModel": "deepseek-v4-flash",
 
   "showAutoCaptureToasts": true,
   "showUserProfileToasts": true,

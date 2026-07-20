@@ -17,10 +17,11 @@
   "autoCaptureLanguage": "auto",
 
   // Work machines use kilo as the NDA-safe default provider (see
-  // docs/model-selection.md). "inherit" captures each prompt with whatever
-  // model actually answered it, so per-agent model overrides never go stale.
+  // docs/model-selection.md). DeepSeek V4 Flash is an explicit cheap
+  // structured-extraction pin — not inherited from the session model —
+  // so memory capture stays predictable and low-cost.
   "opencodeProvider": "kilo",
-  "opencodeModel": "inherit",
+  "opencodeModel": "deepseek/deepseek-v4-flash",
 
   "showAutoCaptureToasts": true,
   "showUserProfileToasts": true,

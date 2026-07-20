@@ -15,6 +15,7 @@
     "opencode-mem",
     "opencode-anthropic-oauth",
     "opencode-caffeinate",
+    "opencode-notify",
     "@tarquinen/opencode-dcp@latest"
   ],
   "permission": {
@@ -24,6 +25,14 @@
     },
     "bash": {
       "*": "ask",
+      "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/sdd-workspace": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/start-server.sh *": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/stop-server.sh *": "allow",
+      "bash ~/.config/opencode/skills/superpowers/skills/systematic-debugging/find-polluter.sh *": "allow",
+      "node ~/.config/opencode/skills/superpowers/skills/writing-skills/render-graphs.js *": "allow",
       "cat *": "allow",
       "echo *": "allow",
       "grep *": "allow",
@@ -62,7 +71,9 @@
     },
     "external_directory": {
       "*": "ask",
-      "~/.config/opencode/**": "allow"
+      "~/.config/opencode/**": "allow",
+      "/var/folders/**": "allow",
+      "/private/var/folders/**": "allow"
     },
     "playwright_*": "deny",
     "homeassistant_*": "deny",
@@ -204,6 +215,14 @@
         },
         "bash": {
           "*": "ask",
+          "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/sdd-workspace": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/start-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/stop-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/systematic-debugging/find-polluter.sh *": "allow",
+          "node ~/.config/opencode/skills/superpowers/skills/writing-skills/render-graphs.js *": "allow",
           "kubectl get *": "allow",
           "kubectl describe *": "allow",
           "kubectl logs *": "allow",
@@ -231,6 +250,14 @@
         },
         "bash": {
           "*": "ask",
+          "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/sdd-workspace": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/start-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/stop-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/systematic-debugging/find-polluter.sh *": "allow",
+          "node ~/.config/opencode/skills/superpowers/skills/writing-skills/render-graphs.js *": "allow",
           "git log *": "allow",
           "git status *": "allow",
           "git diff *": "allow",
@@ -268,6 +295,14 @@
       "permission": {
         "bash": {
           "*": "ask",
+          "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/sdd-workspace": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/start-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/stop-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/systematic-debugging/find-polluter.sh *": "allow",
+          "node ~/.config/opencode/skills/superpowers/skills/writing-skills/render-graphs.js *": "allow",
           "jk --version": "allow",
           "jk version *": "allow",
           "jk auth status*": "allow",
@@ -530,6 +565,14 @@
         },
         "bash": {
           "*": "ask",
+          "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/sdd-workspace": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/start-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/brainstorming/scripts/stop-server.sh *": "allow",
+          "bash ~/.config/opencode/skills/superpowers/skills/systematic-debugging/find-polluter.sh *": "allow",
+          "node ~/.config/opencode/skills/superpowers/skills/writing-skills/render-graphs.js *": "allow",
           "git ls-remote*": "allow",
           "git clone*": "ask",
           "git fetch*": "ask",

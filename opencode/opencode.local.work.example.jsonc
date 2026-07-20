@@ -30,5 +30,10 @@
     "graphify":         { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
     "graphify-extractor": { "model": "kilo/deepseek/deepseek-v4-flash", "variant": "off" },
     "git":              { "model": "kilo/minimax/minimax-m3", "variant": "off" }
+  },
+  "mcp": {
+    "homeassistant": {"enabled": false},
+    "jira": {"enabled": false},
+    "stitch": {"enabled": false},
   }
 }
