@@ -332,13 +332,34 @@ stage_live_repository_docs_route_is_exclusive() {
 }
 
 stage_live_graphify_task_only_to_extractor() {
+  local staged_file="$REPO_ROOT/agents/graphify.md"
   local live_file="$LIVE_AGENTS/graphify.md"
+  local task_block
+
+  # Staged graphify agent frontmatter
+  if [[ ! -f "$staged_file" ]]; then
+    echo "[FAIL] staged graphify agent file not found at $staged_file"
+    return 1
+  fi
+  task_block="$(awk '/^permission:/{in_perm=1; next} in_perm && /^  task:/{in_task=1; next} in_task && /^  [a-z]/ && !/^    /{exit} in_task {print}' "$staged_file")"
+  if ! echo "$task_block" | grep -q '"\*": deny'; then
+    echo "[FAIL] staged graphify task permission missing deny-all"
+    return 1
+  fi
+  if ! echo "$task_block" | grep -q 'graphify-extractor: allow'; then
+    echo "[FAIL] staged graphify task permission missing graphify-extractor allow"
+    return 1
+  fi
+  if [[ "$(echo "$task_block" | grep -c .)" -ne 2 ]]; then
+    echo "[FAIL] staged graphify task permission has unexpected entries (expected exactly 2: deny-all + graphify-extractor)"
+    return 1
+  fi
+
+  # Live graphify agent frontmatter
   if [[ ! -f "$live_file" ]]; then
     echo "[FAIL] live graphify agent file not found at $live_file"
     return 1
   fi
-  # Extract the task permission block from YAML frontmatter
-  local task_block
   task_block="$(awk '/^permission:/{in_perm=1; next} in_perm && /^  task:/{in_task=1; next} in_task && /^  [a-z]/ && !/^    /{exit} in_task {print}' "$live_file")"
   if ! echo "$task_block" | grep -q '"\*": deny'; then
     echo "[FAIL] live graphify task permission missing deny-all"
@@ -348,21 +369,30 @@ stage_live_graphify_task_only_to_extractor() {
     echo "[FAIL] live graphify task permission missing graphify-extractor allow"
     return 1
   fi
+  if [[ "$(echo "$task_block" | grep -c .)" -ne 2 ]]; then
+    echo "[FAIL] live graphify task permission has unexpected entries (expected exactly 2: deny-all + graphify-extractor)"
+    return 1
+  fi
 }
 
 stage_live_repository_docs_external_directory_is_restricted() {
-  local ext_dir
-  ext_dir="$(jq -r '.agent["repository-docs"].permission.external_directory // {}' "$LIVE_CONFIG")"
-  if [[ "$(echo "$ext_dir" | jq -r '.["*"]')" != "ask" ]]; then
-    echo "[FAIL] live repository-docs external_directory missing ask-all"
+  local expected='{"*":"ask","~/.agents/repositories/**":"allow"}'
+  local staged_obj live_obj
+
+  staged_obj="$(jq -c '.agent["repository-docs"].permission.external_directory // {}' "$CONFIG")"
+  if [[ "$staged_obj" != "$expected" ]]; then
+    echo "[FAIL] staged repository-docs external_directory is not exactly $expected (got $staged_obj)"
     return 1
   fi
-  if [[ "$(echo "$ext_dir" | jq -r '.["~/.agents/repositories/**"]')" != "allow" ]]; then
-    echo "[FAIL] live repository-docs external_directory missing managed corpus allow"
+
+  live_obj="$(jq -c '.agent["repository-docs"].permission.external_directory // {}' "$LIVE_CONFIG")"
+  if [[ "$live_obj" != "$expected" ]]; then
+    echo "[FAIL] live repository-docs external_directory is not exactly $expected (got $live_obj)"
     return 1
   fi
-  if [[ "$(echo "$ext_dir" | jq -r 'keys | length')" -ne 2 ]]; then
-    echo "[FAIL] live repository-docs external_directory has unexpected entries"
+
+  if [[ "$staged_obj" != "$live_obj" ]]; then
+    echo "[FAIL] staged and live repository-docs external_directory differ — config drift"
     return 1
   fi
 }

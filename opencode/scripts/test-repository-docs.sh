@@ -56,11 +56,13 @@ sanitized_git -C "$smoke_root/source" tag -a fixture-v1 -m fixture-v1
 sanitized_git init --bare --no-template "$smoke_root/fixture.git"
 sanitized_git -C "$smoke_root/source" push "$smoke_root/fixture.git" HEAD:refs/heads/main --tags
 
-# Fixture execution sentinel: prove the test workflow never modified repository content.
-# Compute a content hash after fixture setup; assert it is unchanged at teardown.
-FIXTURE_SENTINEL="$smoke_root/source/.fixture-sentinel"
+# Fixture execution sentinel: prove the test workflow never modified working-tree
+# content. Hash actual file content (excluding .git) for a deterministic, Git-agnostic
+# fingerprint. A status assertion below catches unstaged modifications index/HEAD
+# hashing would miss.
+FIXTURE_SENTINEL="$smoke_root/.fixture-sentinel"
 touch "$FIXTURE_SENTINEL"
-FIXTURE_CONTENT_HASH="$( (cd "$smoke_root/source" && sanitized_git ls-files -s && sanitized_git rev-parse HEAD) | shasum -a 256 | awk '{print $1}')"
+FIXTURE_CONTENT_HASH="$( (cd "$smoke_root/source" && find . -not -path './.git/*' -not -path './.git' -type f -exec shasum -a 256 {} \; | sort -k2 | shasum -a 256) | awk '{print $1}')"
 
 echo ""
 
@@ -393,11 +395,18 @@ else
   _fail "fixture execution sentinel is missing"
 fi
 
-CURRENT_FIXTURE_HASH="$( (cd "$smoke_root/source" && sanitized_git ls-files -s && sanitized_git rev-parse HEAD) | shasum -a 256 | awk '{print $1}')"
+CURRENT_FIXTURE_HASH="$( (cd "$smoke_root/source" && find . -not -path './.git/*' -not -path './.git' -type f -exec shasum -a 256 {} \; | sort -k2 | shasum -a 256) | awk '{print $1}')"
 if [ "$CURRENT_FIXTURE_HASH" = "$FIXTURE_CONTENT_HASH" ]; then
-  _pass "fixture content hash unchanged — test workflow did not modify repository content"
+  _pass "fixture content hash unchanged — test workflow did not modify working-tree content"
 else
-  _fail "fixture content hash changed — test workflow modified repository content"
+  _fail "fixture content hash changed — test workflow modified working-tree content"
+fi
+
+# Status assertion: detect unstaged modifications index/HEAD hashing would miss
+if [ -z "$(sanitized_git -C "$smoke_root/source" status --porcelain)" ]; then
+  _pass "fixture source status is clean (no unstaged modifications)"
+else
+  _fail "fixture source has unstaged modifications"
 fi
 
 echo ""
