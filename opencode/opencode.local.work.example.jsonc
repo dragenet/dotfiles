@@ -2,9 +2,6 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "kilo/z-ai/glm-5.1",
   "small_model": "kilo/minimax/minimax-m3",
-  "provider": {
-    "kilo": { "options": { "headers": { "X-KiloCode-OrganizationId": "{file:secrets/kilo.org}" } } }
-  },
   "agent": {
     "architect":        { "model": "kilo/z-ai/glm-5.1", "variant": "high" },
     "debugger":         { "model": "kilo/z-ai/glm-5.1", "variant": "high" },
