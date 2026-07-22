@@ -11,6 +11,7 @@
   },
   "formatter": true,
   "lsp": true,
+  "subagent_depth": 2,
   "plugin": [
     "opencode-mnemosyne",
     "opencode-anthropic-oauth",
