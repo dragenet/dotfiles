@@ -10,6 +10,16 @@
 - The current user's home directory is available via `$HOME` — never hardcode or guess usernames
 - If you need the home directory path, run `echo $HOME` — do not invent it
 
+## Agent Scratch Directory
+
+- Use only `<project-root>/.agents/tmp/` for agent temporary/scratch files.
+- Create with `mkdir -p .agents/tmp` when missing.
+- Prefer `mktemp -d .agents/tmp/XXXXXX` or `TMPDIR="$(pwd)/.agents/tmp" mktemp -d`.
+- Do not use `/tmp`, `/private/tmp`, `/var/folders/**`, or `/private/var/folders/**`
+  for agent scratch, and do not set `TMPDIR` to those locations for agent work.
+- Exceptions: harness-owned runtime temp the session already provides; reading
+  pre-existing user/tool paths; plugin-internal state outside agent control.
+
 ## Web Content Rules
 
 Route web work to the specialist that matches its scope:

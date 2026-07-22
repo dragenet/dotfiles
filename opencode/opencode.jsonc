@@ -71,9 +71,7 @@
     },
     "external_directory": {
       "*": "ask",
-      "~/.config/opencode/**": "allow",
-      "/var/folders/**": "allow",
-      "/private/var/folders/**": "allow"
+      "~/.config/opencode/**": "allow"
     },
     "playwright_*": "deny",
     "homeassistant_*": "deny",

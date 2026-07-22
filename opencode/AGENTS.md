@@ -32,12 +32,26 @@ Store agent-created project artifacts only beneath `.agents/`:
 
 - `.agents/superpowers/` for Superpowers specs, plans, reports, and SDD files.
 - `.agents/graphify-out/` for Graphify data and reports.
+- `.agents/tmp/` for all agent temporary/scratch files (diffs, mktemp dirs, intermediate outputs).
 
 Create these directories when needed. Do not create or use root `.ai/`,
 `.superpowers/`, `docs/superpowers/`, or `graphify-out/` artifact directories.
 Build or rebuild a project graph with `graphify extract . --out .agents`; query,
 explain, or traverse it with `--graph .agents/graphify-out/graph.json`. Do not
 use `graphify update`, which cannot choose an output directory.
+
+### Temporary And Scratch Files
+
+- ALWAYS use `<project-root>/.agents/tmp/` for agent-created temporary files.
+- Create it when needed: `mkdir -p .agents/tmp`.
+- Prefer project-local temp creation, e.g. `mktemp -d .agents/tmp/XXXXXX` or
+  `TMPDIR="$(pwd)/.agents/tmp" mktemp -d`.
+- Do NOT use `/tmp`, `/private/tmp`, `/var/folders/**`, or
+  `/private/var/folders/**` for agent scratch.
+- Do NOT point `TMPDIR` at system temp paths for agent work.
+- Exceptions: harness-owned runtime paths the session already provides; reading
+  paths the user or external tools already created; plugin-internal state
+  outside agent control.
 
 ## Documentation And Web Routing
 
