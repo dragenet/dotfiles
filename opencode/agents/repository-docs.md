@@ -10,17 +10,23 @@ permission:
   grep: allow
   bash:
     "*": ask
+    "pwd": allow
+    "pwd *": allow
+    "npx ctx7*": allow
+    "ctx7*": allow
+    "graphify query*": allow
+    "graphify path*": allow
+    "graphify explain*": allow
+    "graphify --help": allow
+    "graphify -h": allow
     "git init*": ask
     "git fetch*": ask
     "git checkout*": ask
     "git tag*": deny
-    "graphify query*": allow
     "ls *": allow
     "find *": ask
     "mkdir *": allow
     "test *": allow
-    "pwd *": allow
-    "pwd": allow
     "python3 -c *": deny
     "jq *": allow
     "rm -rf*": deny

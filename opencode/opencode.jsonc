@@ -54,6 +54,11 @@
       "git push*": "ask",
       "npx ctx7*": "allow",
       "ctx7*": "allow",
+      "graphify query*": "allow",
+      "graphify path*": "allow",
+      "graphify explain*": "allow",
+      "graphify --help": "allow",
+      "graphify -h": "allow",
       "rm -rf*": "deny",
       "dd *": "deny",
       "mkfs*": "deny",
@@ -102,6 +107,8 @@
       "permission": {
         "bash": {
           "*": "allow",
+          "pwd": "allow",
+          "pwd *": "allow",
           "rm -rf*": "deny",
           "dd *": "deny",
           "mkfs*": "deny",
@@ -213,6 +220,15 @@
         },
         "bash": {
           "*": "ask",
+          "pwd": "allow",
+          "pwd *": "allow",
+          "npx ctx7*": "allow",
+          "ctx7*": "allow",
+          "graphify query*": "allow",
+          "graphify path*": "allow",
+          "graphify explain*": "allow",
+          "graphify --help": "allow",
+          "graphify -h": "allow",
           "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
@@ -248,6 +264,15 @@
         },
         "bash": {
           "*": "ask",
+          "pwd": "allow",
+          "pwd *": "allow",
+          "npx ctx7*": "allow",
+          "ctx7*": "allow",
+          "graphify query*": "allow",
+          "graphify path*": "allow",
+          "graphify explain*": "allow",
+          "graphify --help": "allow",
+          "graphify -h": "allow",
           "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
@@ -293,6 +318,8 @@
       "permission": {
         "bash": {
           "*": "ask",
+          "pwd": "allow",
+          "pwd *": "allow",
           "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
@@ -563,6 +590,15 @@
         },
         "bash": {
           "*": "ask",
+          "pwd": "allow",
+          "pwd *": "allow",
+          "npx ctx7*": "allow",
+          "ctx7*": "allow",
+          "graphify query*": "allow",
+          "graphify path*": "allow",
+          "graphify explain*": "allow",
+          "graphify --help": "allow",
+          "graphify -h": "allow",
           "bash scripts/check-skill-whitelists.sh 2>&1": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/task-brief *": "allow",
           "bash ~/.config/opencode/skills/superpowers/skills/subagent-driven-development/scripts/review-package *": "allow",
@@ -576,13 +612,10 @@
           "git fetch*": "ask",
           "git checkout*": "ask",
           "git tag*": "deny",
-          "graphify query*": "allow",
           "ls *": "allow",
           "find *": "ask",
           "mkdir *": "allow",
           "test *": "allow",
-          "pwd *": "allow",
-          "pwd": "allow",
           "python3 -c *": "deny",
           "jq *": "allow",
           "rm -rf*": "deny",
@@ -705,7 +738,11 @@
     },
     "tmux-mcp": {
       "type": "local",
-      "command": ["npx", "-y", "tmux-mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "tmux-mcp"
+      ],
       "enabled": true
     }
   }

@@ -10,6 +10,8 @@ permission:
   grep: allow
   bash:
     "*": ask
+    "pwd": allow
+    "pwd *": allow
     "git status*": allow
     "git diff*": allow
     "git diff --cached*": allow

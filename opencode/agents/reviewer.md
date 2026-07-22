@@ -10,6 +10,15 @@ permission:
   list: allow
   bash:
     "*": ask
+    "pwd": allow
+    "pwd *": allow
+    "npx ctx7*": allow
+    "ctx7*": allow
+    "graphify query*": allow
+    "graphify path*": allow
+    "graphify explain*": allow
+    "graphify --help": allow
+    "graphify -h": allow
     "git status*": allow
     "git diff*": allow
     "git diff --cached*": allow

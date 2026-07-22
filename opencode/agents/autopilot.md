@@ -10,6 +10,8 @@ permission:
     "*": allow
   bash:
     "*": allow
+    "pwd": allow
+    "pwd *": allow
     "rm -rf*": deny
     "dd *": deny
     "mkfs*": deny

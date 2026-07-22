@@ -77,6 +77,37 @@ npx ctx7@latest docs <library-id> "<full question>"
 The shared bash permission allows `npx ctx7*` and `ctx7*`. Keep credentials out
 of lookup queries.
 
+## Sensible Shared Bash Defaults
+
+The global `permission.bash` ruleset explicitly allows:
+
+- `pwd` / `pwd *` — every agent that can run bash at all
+- `npx ctx7*` / `ctx7*` — docs lookups (see above)
+- read-only `graphify` lookups (`graphify query*`, `graphify path*`,
+  `graphify explain*`, `graphify --help`, `graphify -h`) so agents that inherit
+  the shared bash ruleset (e.g. `general`, `coder`, `frontend`, `cloudflare`)
+  don't hit an `ask` prompt just to query an already-built graph
+
+Write/mutating graphify commands (`extract`, `add`, `export`, `hook install`,
+etc.) stay `ask`/agent-scoped.
+
+Agents that declare their own `bash` object fully replace the global ruleset
+rather than merge with it, so shared defaults must be repeated in each owned
+block:
+
+| Agent | Shared defaults duplicated |
+| --- | --- |
+| `debugger`, `devops`, `repository-docs`, `reviewer` | `pwd`, `ctx7`, read-only `graphify` |
+| `autopilot`, `jenkins`, `git` | `pwd` only (`*` is already `allow` for autopilot; jenkins/git are purpose-scoped utilities) |
+
+Utility agents with flat `bash: deny` (`architect`, `plan`, `web-fast-context`,
+`webscraper`, `webresearcher`, `webmonitor`, `jira`, `stitch-mcp`, `webdebugger`,
+`ha`) intentionally cannot run shell at all — no `pwd` exception.
+
+When adding a new shared default, update the global block **and** every owned
+bash object that should receive it (and the matching agent frontmatter when
+the ruleset lives there).
+
 ## Plugins And Runtime Behavior
 
 - `opencode-mnemosyne` provides persistent local memory via the Mnemosyne CLI
