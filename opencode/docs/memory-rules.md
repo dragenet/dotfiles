@@ -1,49 +1,66 @@
 # Memory Rules
 
-These rules apply to persistent memory provided by `opencode-mem`, exposed as
-a single `memory` tool with `mode` and `scope` parameters.
+These rules apply to persistent memory provided by `opencode-mnemosyne`
+(Mnemosyne CLI + OpenCode plugin). Memory is local/offline (SQLite FTS5 +
+vectors). There is no background auto-capture and no user-profile subsystem.
+
+## Tools
+
+| Tool | Use |
+|------|-----|
+| `memory_recall` | Search **project** memory |
+| `memory_recall_global` | Search **global** (cross-project) memory |
+| `memory_store` | Store a **project** memory (`core?: boolean`) |
+| `memory_store_global` | Store a **global** memory (`core?: boolean`) |
+| `memory_delete` | Delete by numeric document `id` |
+
+Project collection name is the basename of the working directory. Global
+collection is shared across projects.
 
 ## Recall
 
-At the start of a task, call `memory({ mode: "search", query: "<keywords from
-the request>" })`. Use relevant results and do not ask for information already
-present in memory. For cross-project facts, repeat the search with
-`scope: "all-projects"`.
+At the start of a task, call:
 
-Call `memory({ mode: "profile" })` when a task depends on durable user
-preferences or working style, since auto-capture maintains that profile
-separately from regular memories.
+- `memory_recall({ query: "<keywords from the request>" })`
+- `memory_recall_global({ query: "<keywords>" })` when preferences or
+  cross-project conventions may matter
 
-## Routing
+Use relevant results. Do not ask the user for facts already in memory.
 
-- Project-specific context: `memory({ mode: "add", content: "..." })` (default
-  `scope: "project"`).
-- Cross-project conventions or user preferences: `memory({ mode: "add",
-  content: "...", scope: "all-projects" })`.
+## Store
 
-There is no separate "core" tier. If a fact must always surface early in a
-session, note that in the content itself; `chatMessage.injectOn: "first"`
-(configured in `opencode-mem.jsonc`) already re-injects the most relevant
-recent memories at the start of a session.
+After confirmed decisions, root causes and fixes, cross-project conventions, or
+significant discoveries, store one concise durable fact:
 
-## Store And Correct
+- Project-specific: `memory_store({ content: "..." })`
+- Cross-project / user preferences: `memory_store_global({ content: "..." })`
 
-Store concise, durable facts after confirmed decisions, root causes and fixes,
-cross-project conventions, or significant discoveries. Do not store trivial
-exchanges, transient debugging output, intermediate steps, or facts already in
-memory.
+Mark only critical always-relevant facts as core:
 
-`opencode-mem` also runs auto-capture in the background (an AI call that
-summarizes technical work into memory automatically); manual `memory({ mode:
-"add" })` calls remain the mechanism for explicit, high-confidence, or
-user-requested facts that should not wait for auto-capture's own judgment.
+- `memory_store({ content: "...", core: true })`
+- Use core sparingly
 
-When a memory is stale or wrong, use `memory({ mode: "list" })` to find it and
-correct it going forward with a new `add` call describing the current state;
-older superseded entries naturally rank lower in future searches.
+Do not store trivial exchanges, transient debugging output, intermediate steps,
+or facts already present.
 
-## Web UI
+## Correct
 
-A local web interface for browsing and managing memories is available at
-`http://127.0.0.1:4747` (configurable via `webServerPort` in
-`opencode-mem.jsonc`).
+When a memory is wrong, delete it with `memory_delete({ id: <n> })` (id appears
+in recall/list output), then store the corrected fact if still needed.
+
+## What this stack does not do
+
+- No automatic session summarization into memory
+- No injected user-profile ontology
+- No Memory Explorer web UI (former opencode-mem :4747)
+
+Manual store/recall is the only path. Prefer high-confidence durable facts.
+
+## CLI (optional direct use)
+
+Binary: `mnemosyne` (typically `~/.local/bin/mnemosyne`).  
+DB default: `~/.local/share/mnemosyne/mnemosyne.db`.  
+Optional config: `~/.config/mnemosyne/config.yaml`.
+
+Useful commands: `mnemosyne setup`, `mnemosyne search -f plain "..."`,
+`mnemosyne add "..."`, `mnemosyne add -g "..."`, `mnemosyne list -t core -f plain`.

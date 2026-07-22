@@ -68,8 +68,8 @@ and cannot be delegated to. `git` and `graphify-extractor` are leaf agents;
 `graphify` may delegate only to `graphify-extractor`.
 
 Route Jenkins controller actions through `@jenkins`; do not run the `jk` CLI
-outside that specialist. Persistent-memory behavior is limited to the routing
-rules in `docs/memory-rules.md`.
+outside that specialist. Persistent-memory behavior (`opencode-mnemosyne`) is
+limited to the routing rules in `docs/memory-rules.md`.
 
 Background delegation is disabled (the `opencode-background-agents` plugin was
 removed). All delegation goes through standard native `task` delegation (the

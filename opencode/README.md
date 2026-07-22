@@ -15,9 +15,8 @@ same everywhere; everything machine-specific lives in two gitignored files:
 
 | File | Tracked? | Same on every machine? | Holds |
 |------|----------|------------------------|-------|
-| `opencode.jsonc` | yes | **yes (identical)** | agents, MCP servers, skills, permissions, tool gating |
+| `opencode.jsonc` | yes | **yes (identical)** | agents, MCP servers, skills, permissions, tool gating; memory via `opencode-mnemosyne` plugin (system `mnemosyne` CLI, not a gitignored jsonc) |
 | `opencode.local.jsonc` | no (gitignored) | no | `model`, `small_model`, `provider` block, per-agent model overrides |
-| `opencode-mem.jsonc` | no (gitignored) | no | opencode-mem plugin config: storage path, embedding model, auto-capture provider |
 | `secrets/*` | no (gitignored) | no | API keys and infra URLs (`{file:secrets/...}`) |
 | `.envrc` | no (gitignored) | no | optional direnv loader for `OPENCODE_CONFIG` |
 
@@ -86,17 +85,21 @@ cp ~/.config/opencode/opencode.local.personal.example.jsonc ~/.config/opencode/o
 cp ~/.config/opencode/opencode.local.work.example.jsonc ~/.config/opencode/opencode.local.jsonc
 ```
 
-### 1b. Create `opencode-mem.jsonc`
+### 1b. Install Mnemosyne CLI
+
+Persistent memory uses the `opencode-mnemosyne` plugin plus the system
+`mnemosyne` binary (no OpenCode JSONC for this plugin).
 
 ```bash
-cp ~/.config/opencode/opencode-mem.personal.example.jsonc ~/.config/opencode/opencode-mem.jsonc
-# Or, on a work machine:
-cp ~/.config/opencode/opencode-mem.work.example.jsonc ~/.config/opencode/opencode-mem.jsonc
+curl -fsSL https://raw.githubusercontent.com/gandazgul/mnemosyne/main/install.sh | sh
+# Ensure ~/.local/bin is on PATH, then:
+mnemosyne setup
 ```
 
-The plugin also writes a full commented template to this path on first startup
-if the file does not already exist, so this step just seeds the provider/scope
-defaults ahead of time.
+Binary default: `~/.local/bin/mnemosyne`.  
+DB default: `~/.local/share/mnemosyne/mnemosyne.db`.  
+Optional config: `~/.config/mnemosyne/config.yaml`.  
+Routing rules: `docs/memory-rules.md`.
 
 ### 2. Fill in secrets
 
@@ -221,12 +224,9 @@ diff <(jq -S . ~/.config/opencode-priv/opencode.jsonc) \
 
 ```
 ~/.config/opencode/
-├── opencode.jsonc         # shared base (tracked, identical everywhere)
+├── opencode.jsonc         # shared base (tracked; plugin list includes opencode-mnemosyne)
 ├── opencode.local.jsonc    # per-machine models/providers (gitignored)
-├── opencode-mem.jsonc     # opencode-mem plugin config (gitignored)
 ├── .envrc                 # optional direnv loader (gitignored)
-├── opencode-mem.personal.example.jsonc  # opencode-mem config template (personal)
-├── opencode-mem.work.example.jsonc      # opencode-mem config template (work)
 ├── AGENTS.md              # agent roster + conventions
 ├── agents/               # agent definitions (*.md)
 ├── docs/                 # rules, specs, plans

@@ -79,11 +79,12 @@ of lookup queries.
 
 ## Plugins And Runtime Behavior
 
-- `opencode-mem` provides persistent memory (local vector DB, auto-capture,
-  and a `memory` tool) described in `docs/memory-rules.md`. Its own config
-  lives at `~/.config/opencode/opencode-mem.jsonc` (gitignored, per-machine);
-  copy `opencode-mem.personal.example.jsonc` or `opencode-mem.work.example.jsonc`
-  to `opencode-mem.jsonc` and adjust.
+- `opencode-mnemosyne` provides persistent local memory via the Mnemosyne CLI
+  (tools: `memory_recall`, `memory_store`, `memory_delete` + global variants).
+  Requires the `mnemosyne` binary on PATH (`curl -fsSL
+  https://raw.githubusercontent.com/gandazgul/mnemosyne/main/install.sh | sh`
+  then `mnemosyne setup`). Routing rules: `docs/memory-rules.md`. No separate
+  OpenCode JSONC for this plugin.
 - `opencode-caffeinate` keeps macOS awake while OpenCode sessions are active.
 - `opencode-background-agents` was removed (disabled per user preference).
   All delegation uses standard native `task` delegation (the `Task` tool /

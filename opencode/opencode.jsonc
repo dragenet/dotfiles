@@ -12,7 +12,7 @@
   "formatter": true,
   "lsp": true,
   "plugin": [
-    "opencode-mem",
+    "opencode-mnemosyne",
     "opencode-anthropic-oauth",
     "opencode-caffeinate",
     "opencode-notify",
