@@ -43,8 +43,11 @@ permission:
     "git clean*": deny
     "rm -rf*": deny
   task:
-    "*": allow
-    autopilot: deny
+    "*": deny
+    explore: allow
+    web-fast-context: allow
+    webresearcher: allow
+    git: allow
   skill:
     "*": deny
     using-superpowers: allow
